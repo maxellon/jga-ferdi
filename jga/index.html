@@ -356,8 +356,8 @@ R('info').on('value', s => { D.info = s.val() || {}; if(!s.exists()){ const u = 
   if(!onErr.hut2 && s.exists()){ onErr.hut2 = true; Object.entries(D.info).forEach(([id,b]) => { if(/hier eintragen/.test(b.text||'') && /(Hüttenadresse|^Adresse): hier eintragen|^Adresse, Zufahrt/m.test(b.text||'')) R('info/' + id + '/text').set((b.text||'').replace(/Hüttenadresse: hier eintragen/, 'Hüttenadresse: Oberweg 22, 6145 Navis, Tirol').replace(/^Adresse, Zufahrt, Schlüsselübergabe, WLAN: hier eintragen\./, 'Adresse: Oberweg 22, 6145 Navis, Tirol\nZufahrt, Schlüsselübergabe, WLAN: hier eintragen.')); }); }
   render(); }, onErr);
 R('settings').on('value', s => { D.settings = s.val() || {}; applyHero(); render(); }, onErr);
-/* Einmalig: Alex, Sven und Max aus der Teilnehmerliste nehmen, damit sie sich selbst neu registrieren */
-const PURGE_NAMES = ['alex','sven','max'];
+/* Einmalig: Alex und Sven aus der Teilnehmerliste nehmen, damit sie sich selbst neu registrieren */
+const PURGE_NAMES = ['alex','sven'];
 let peopleLoaded = false;
 R('people').on('value', s => { D.people = s.val() || {}; peopleLoaded = true; render(); renderMe(); checkRegistered(); }, onErr);
 R('settings/purgeOrg1').transaction(cur => cur ? undefined : Date.now(), (err, committed) => {
