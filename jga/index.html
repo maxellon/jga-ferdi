@@ -196,6 +196,8 @@ tr.q td:first-child .nm::after{content:" ↑";color:var(--ok)}
 .train .b .v{font-family:var(--display);font-weight:800;font-size:clamp(22px,6vw,30px);line-height:1.1;font-variant-numeric:tabular-nums}
 .train .b.last .v{color:var(--bad)}
 .train .b small{display:block;color:var(--muted);font-size:12px}
+.train .b .gl{display:inline-block;max-width:100%;margin-top:5px;padding:1px 9px;border-radius:999px;background:var(--pine);color:#fff;font-size:12.5px;font-weight:700}
+.train .b .gl.unk{white-space:nowrap;background:transparent;color:var(--muted);border:1px dashed var(--line);font-weight:600}
 .taxi{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;font-size:15px}
 .taxi a{color:var(--pine);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-decoration:none}
 .taxi small{color:var(--muted);display:block;font-size:12px}
@@ -551,6 +553,9 @@ const busDeps = () => ((D.settings.train && D.settings.train.bus) || DEFAULT_BUS
 /* Nightliner 560N Innsbruck → Matrei, nur Fr/Sa-Nacht und vor Feiertagen (Stand 2023, prüfen) */
 const DEFAULT_NIGHT = '01:00, 02:00, 03:00';
 const nightDeps = () => ((D.settings.train && D.settings.train.night) || DEFAULT_NIGHT).split(/[,\s]+/).map(x => x.trim()).filter(x => /^\d{1,2}:\d{2}$/.test(x)).map(x => x.padStart(5,'0')).sort();
+/* Gleise / Haltestelle: online nicht verlässlich zu finden, daher leer, bis jemand sie unter „Fahrplan ändern“ einträgt */
+const glVal = k => String(((D.settings.train || {})[k]) || '').trim();
+const glPill = (k, word = 'Gleis') => { const v = glVal(k).replace(/^(gleis|bahnsteig)\s*/i, ''); return v ? `<span class="gl">${word ? word + ' ' : ''}${esc(v)}</span>` : `<span class="gl unk">${word || 'Haltestelle'}: s. Anzeige</span>`; };
 const toMin = t => +t.slice(0,2)*60 + +t.slice(3);
 const toHHMM = m => `${String(Math.floor(((m%1440)+1440)%1440/60)).padStart(2,'0')}:${String(((m%1440)+1440)%1440%60).padStart(2,'0')}`;
 function busCard(){
@@ -565,11 +570,11 @@ function busCard(){
     ${next ? `<div class="train">
       <div class="b"><small>Loslaufen zur Haltestelle</small><div class="v">${toHHMM(toMin(next.b) - WALK_MIN)}</div><small>${fmt(toMin(next.b) - WALK_MIN - nowMin)}</small></div>
       <div class="b"><small>Bus ab Navis</small><div class="v">${next.b}</div><small>an Bahnhof ca. ${toHHMM(next.arr)}</small></div>
-      <div class="b" style="grid-column:1/-1"><small>Anschluss S-Bahn nach Innsbruck</small><div class="v">${next.conn || '–'}</div><small>${next.conn ? `${toMin(next.conn) - next.arr} Min. Umstieg · an Innsbruck Hbf ca. ${toHHMM(toMin(next.conn) + 16)}` : 'keine S-Bahn im Fahrplan'}</small></div>
+      <div class="b" style="grid-column:1/-1"><small>Anschluss S-Bahn nach Innsbruck</small><div class="v">${next.conn || '–'}</div><small>${next.conn ? `${toMin(next.conn) - next.arr} Min. Umstieg · an Innsbruck Hbf ca. ${toHHMM(toMin(next.conn) + 16)}` : 'keine S-Bahn im Fahrplan'}</small>${next.conn ? glPill('gleisMatrei', 'Matrei Gleis') : ''}</div>
     </div>` : '<p class="muted">Heute kein Bus mehr im hinterlegten Fahrplan.</p>'}
     <details><summary class="muted" style="cursor:pointer;font-size:14px">Alle Verbindungen</summary><table style="margin-top:6px"><thead><tr><th>Bus ab Navis</th><th>Bahnhof</th><th>S-Bahn</th><th>Innsbruck</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.b}</td><td>${toHHMM(r.arr)}</td><td>${r.conn || '–'}</td><td>${r.conn ? toHHMM(toMin(r.conn)+16) : '–'}</td></tr>`).join('')}</tbody></table></details>
     <p class="muted" style="font-size:13px">Haltestelle am Oberweg (z. B. Navis Abzw Kerschbaumsiedlung), ${WALK_MIN} Min. Fußweg eingerechnet, ca. ${BUS_MIN} Min. Fahrt. Busfahrplan unvollständig, live: <a href="https://fahrplan.oebb.at/bin/query.exe/dn?S=Navis+Dorf&Z=Innsbruck+Hbf&start=1" target="_blank" rel="noopener" style="color:var(--pine)">ÖBB-Auskunft Navis → Innsbruck</a> (zeigt Bus und S-Bahn zusammen).</p>
-    ${edit ? `<div class="stack" id="busForm" hidden><textarea id="busDeps" style="min-height:60px">${esc(bus.join(', '))}</textarea><div class="row"><button class="btn primary small" id="busSave">Speichern</button><button class="btn small" id="busReset">Standard</button></div><p class="muted" style="font-size:12px">Abfahrten Bus 580 ab Navis Richtung Matrei, mit Komma getrennt.</p></div>` : ''}
+    ${edit ? `<div class="stack" id="busForm" hidden><label class="field">Bus 580 ab Navis<textarea id="busDeps" style="min-height:60px">${esc(bus.join(', '))}</textarea></label><label class="field">Gleis Matrei (S-Bahn Richtung Innsbruck)<input type="text" id="gleisMatrei" value="${esc(glVal('gleisMatrei'))}" placeholder="leer = „siehe Anzeige“"></label><div class="row"><button class="btn primary small" id="busSave">Speichern</button><button class="btn small" id="busReset">Standard</button></div><p class="muted" style="font-size:12px">Abfahrten Bus 580 ab Navis Richtung Matrei, mit Komma getrennt.</p></div>` : ''}
   </div>`;
 }
 function trainCard(){
@@ -582,14 +587,14 @@ function trainCard(){
   const lastGone = toMin(last) < nowMin;
   const nightMode = lastGone || nowMin < 4*60 + 30;
   const taxiHtml = `<div class="taxi" style="margin-top:4px">${TAXIS.map(([nm,t,w]) => `<div>${esc(nm)}<small>${esc(w)}</small></div><a href="tel:${t.replace(/\s/g,'')}">${esc(t)}</a>`).join('')}</div>`;
-  const editForm = edit ? `<div class="stack" id="trainForm" hidden><label class="field">S-Bahn ab Innsbruck Hbf<textarea id="trainDeps" style="min-height:70px">${esc(list.join(', '))}</textarea></label><label class="field">Nightliner 560N ab Innsbruck<input type="text" id="nightDeps" value="${esc(nightDeps().join(', '))}"></label><div class="row"><button class="btn primary small" id="trainSave">Speichern</button><button class="btn small" id="trainReset">Standard</button></div><p class="muted" style="font-size:12px">Abfahrtszeiten ab Innsbruck Hbf, mit Komma getrennt.</p></div>` : '';
+  const editForm = edit ? `<div class="stack" id="trainForm" hidden><label class="field">S-Bahn ab Innsbruck Hbf<textarea id="trainDeps" style="min-height:70px">${esc(list.join(', '))}</textarea></label><label class="field">Gleis Innsbruck Hbf (S-Bahn Richtung Brenner)<input type="text" id="gleisIbk" value="${esc(glVal('gleisIbk'))}" placeholder="leer = „siehe Anzeige“"></label><label class="field">Nightliner 560N ab Innsbruck<input type="text" id="nightDeps" value="${esc(nightDeps().join(', '))}"></label><label class="field">Nightliner-Haltestelle in Innsbruck<input type="text" id="nightStop" value="${esc(glVal('nightStop'))}" placeholder="z. B. Hbf, Bussteig …"></label><div class="row"><button class="btn primary small" id="trainSave">Speichern</button><button class="btn small" id="trainReset">Standard</button></div><p class="muted" style="font-size:12px">Abfahrtszeiten ab Innsbruck Hbf, mit Komma getrennt.</p></div>` : '';
   if(nightMode){
     const nights = nightDeps(); const nm = nowMin < 4*60+30 ? nowMin : nowMin - 1440;
     const nextN = nights.find(t => toMin(t) >= nm);
     const dow = n.getDay(), nightOk = dow === 5 || dow === 6 || (dow === 0 && nowMin < 4*60+30);
     return `<div class="card stack" style="gap:8px"><div class="sub-h"><h2>Rückweg: Innsbruck → Hütte</h2>${edit ? '<button class="btn small" id="trainEdit">Fahrplan ändern</button>' : ''}</div>
       <div class="notice" style="font-weight:700">Letzte S-Bahn (${last}) ist weg.</div>
-      ${nightOk ? `<div class="train"><div class="b"><small>Nightliner 560N ab Innsbruck</small><div class="v">${nextN || '–'}</div><small>${nextN ? fmt(toMin(nextN) - nm) + ' · bis Matrei, dann Taxi' : 'heute Nacht keiner mehr'}</small></div><div class="b last"><small>Letzter Nightliner</small><div class="v">${nights[nights.length-1] || '–'}</div><small>Zeiten von 2023, prüfen</small></div></div>`
+      ${nightOk ? `<div class="train"><div class="b"><small>Nightliner 560N ab Innsbruck</small><div class="v">${nextN || '–'}</div><small>${nextN ? fmt(toMin(nextN) - nm) + ' · bis Matrei, dann Taxi' : 'heute Nacht keiner mehr'}</small>${glPill('nightStop', '')}</div><div class="b last"><small>Letzter Nightliner</small><div class="v">${nights[nights.length-1] || '–'}</div><small>Zeiten von 2023, prüfen</small>${glPill('nightStop', '')}</div></div>`
         : '<p class="muted">Der Nightliner 560N fährt nur in den Nächten Fr/Sa und Sa/So. Heute: Taxi.</p>'}
       <h3 style="margin-top:4px">Taxi rufen</h3>${taxiHtml}
       ${editForm}
@@ -597,8 +602,8 @@ function trainCard(){
   }
   return `<div class="card stack" style="gap:8px"><div class="sub-h"><h2>Rückweg: Innsbruck → Hütte</h2>${edit ? '<button class="btn small" id="trainEdit">Fahrplan ändern</button>' : ''}</div>
     <div class="train">
-      <div class="b"><small>Nächste Bahn</small><div class="v">${next ? next : '–'}</div><small>${next ? fmt(diff(next)) : 'heute keine mehr'}</small></div>
-      <div class="b last"><small>Letzte Bahn</small><div class="v">${last}</div><small>${fmt(diff(last))}</small></div>
+      <div class="b"><small>Nächste Bahn</small><div class="v">${next ? next : '–'}</div><small>${next ? fmt(diff(next)) : 'heute keine mehr'}</small>${next ? glPill('gleisIbk') : ''}</div>
+      <div class="b last"><small>Letzte Bahn</small><div class="v">${last}</div><small>${fmt(diff(last))}</small>${glPill('gleisIbk')}</div>
     </div>
     <p class="muted" style="font-size:13px">Danach Fr/Sa-Nacht: Nightliner 560N (${nightDeps().join(' · ')} Uhr, prüfen) bis Matrei und Taxi. Taxinummern erscheinen hier automatisch nach der letzten Bahn.</p>
     <p class="muted" style="font-size:13px">16 Min. Fahrzeit, ab Bahnhof Matrei mit dem Taxi zur Hütte. Zeiten nach Fahrplanmuster 2026, Verspätungen live: <a href="https://fahrplan.oebb.at/bin/query.exe/dn?S=Innsbruck+Hbf&Z=Matrei+am+Brenner&start=1" target="_blank" rel="noopener" style="color:var(--pine)">ÖBB-Auskunft</a></p>
@@ -607,10 +612,10 @@ function trainCard(){
 }
 function wireTrain(){
   if($('#trainEdit')) $('#trainEdit').onclick = () => { $('#trainForm').hidden = !$('#trainForm').hidden; };
-  if($('#trainSave')) $('#trainSave').onclick = () => R('settings/train').update({deps: $('#trainDeps').value, night: $('#nightDeps').value}).then(() => toast('Fahrplan gespeichert'));
+  if($('#trainSave')) $('#trainSave').onclick = () => R('settings/train').update({deps: $('#trainDeps').value, night: $('#nightDeps').value, gleisIbk: $('#gleisIbk').value.trim() || null, nightStop: $('#nightStop').value.trim() || null}).then(() => toast('Fahrplan gespeichert'));
   if($('#trainReset')) $('#trainReset').onclick = () => R('settings/train').update({deps: null, night: null});
   if($('#busEdit')) $('#busEdit').onclick = () => { $('#busForm').hidden = !$('#busForm').hidden; };
-  if($('#busSave')) $('#busSave').onclick = () => R('settings/train/bus').set($('#busDeps').value).then(() => toast('Busfahrplan gespeichert'));
+  if($('#busSave')) $('#busSave').onclick = () => R('settings/train').update({bus: $('#busDeps').value, gleisMatrei: $('#gleisMatrei').value.trim() || null}).then(() => toast('Busfahrplan gespeichert'));
   if($('#busReset')) $('#busReset').onclick = () => R('settings/train/bus').remove();
 }
 setInterval(() => { syncEta(); if((tab === 'plan' || tab === 'ibk') && !typing()) render(); }, 60000);
