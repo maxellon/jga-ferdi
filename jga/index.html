@@ -318,7 +318,7 @@ const SEED_SCHEDULE = [
   {day:'do', time:'11:00', title:'Bustransfer nach Innsbruck', place:'Bus ab Oberesslingen', addr:'', note:'ca. 4 bis 5 Stunden. Quiz-Runden im Bus!'},
   {day:'do', time:'14:00', title:'Bierpong-Auslosung', place:'Im Bus', addr:'', note:'Alle 8 Teams müssen bis dahin unter „Bierpong“ eingetragen sein. Dann wird live ausgelost.'},
   {day:'do', time:'16:30', title:'Ankunft in der Hütte', place:'Peerhof, Navis', addr:'Oberweg 22, 6145 Navis, Tirol', note:'ca. 16:30 bis 17 Uhr', lat:47.1311, lng:11.5403},
-  {day:'do', time:'19:00', title:'Bierpong-Turnier, Party, Open End', place:'Hütte', addr:'', note:'2 Tische, 10 Min. pro Spiel: Turnier ca. 2 Stunden. Turnierbaum unter „Bierpong“'},
+  {day:'do', time:'19:00', title:'Bierpong-Turnier, Party, Open End', place:'Hütte', addr:'', note:'2 Tische, 10–15 Min. pro Spiel. Turnierbaum unter „Bierpong“'},
   {day:'fr', time:'10:00', title:'Frühstück und LRG-Auslosung', place:'Hütte', addr:'', note:'Alle 8 Teams müssen bis dahin unter „LRG“ eingetragen sein (oder vom Bierpong übernommen). Dann wird live ausgelost.'},
   {day:'fr', time:'11:30', title:'Taxi zum Bahnhof', place:'Hütte → Bahnhof Matrei am Brenner', addr:'Bahnhof Matrei am Brenner, 6143 Matrei am Brenner', note:'Taxis vorbestellen (siehe Notfall-Block). Ca. 15 Minuten ins Tal.', lat:47.1245, lng:11.4535},
   {day:'fr', time:'12:00', title:'S-Bahn nach Innsbruck', place:'Ab Bahnhof Matrei am Brenner', addr:'', note:'ca. 20 Minuten bis Innsbruck Hbf'},
@@ -344,7 +344,7 @@ R('schedule').on('value', s => { D.schedule = s.val() || {}; if(!seeded && !s.ex
   if(!onErr.hut && s.exists()){ onErr.hut = true; Object.entries(D.schedule).forEach(([id,it]) => { if(/ankunft in der hütte/i.test(it.title||'') && (!it.addr || it.place === 'Unsere Hütte')) R('schedule/' + id).update({place: 'Peerhof, Navis', addr: 'Oberweg 22, 6145 Navis, Tirol', lat: it.lat || 47.1311, lng: it.lng || 11.5403}); }); }
   if(!onErr.navis && s.exists()){ onErr.navis = true; const sb = SEED_SCHEDULE.find(it => it.day === 'sa'); Object.entries(D.schedule).forEach(([id,it]) => {
       if(it.day === 'sa' && /abfahrt/i.test(it.title||'') && !/navis/i.test((it.place||'') + (it.addr||''))) R('schedule/' + id).update({title: sb.title, place: sb.place, addr: sb.addr, note: it.note || sb.note, lat: sb.lat, lng: sb.lng});
-      if(it.day === 'do' && /bierpong-turnier/i.test(it.title||'') && !/tisch/i.test(it.note||'')) R('schedule/' + id).update({note: SEED_SCHEDULE.find(x => /bierpong-turnier/i.test(x.title)).note}); }); }
+      if(it.day === 'do' && /bierpong-turnier/i.test(it.title||'') && (!/tisch/i.test(it.note||'') || /ca\. 2 Stunden/.test(it.note||''))) R('schedule/' + id).update({note: SEED_SCHEDULE.find(x => /bierpong-turnier/i.test(x.title)).note}); }); }
   render(); }, onErr);
 R('teams').on('value', s => { D.teams = s.val() || {}; render(); }, onErr);
 R('results').on('value', s => { D.results = s.val() || {}; render(); }, onErr);
