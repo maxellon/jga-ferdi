@@ -318,7 +318,7 @@ const SEED_SCHEDULE = [
   {day:'do', time:'11:00', title:'Bustransfer nach Innsbruck', place:'Bus ab Oberesslingen', addr:'', note:'ca. 4 bis 5 Stunden. Quiz-Runden im Bus!'},
   {day:'do', time:'14:00', title:'Bierpong-Auslosung', place:'Im Bus', addr:'', note:'Alle 8 Teams müssen bis dahin unter „Bierpong“ eingetragen sein. Dann wird live ausgelost.'},
   {day:'do', time:'16:30', title:'Ankunft in der Hütte', place:'Peerhof, Navis', addr:'Oberweg 22, 6145 Navis, Tirol', note:'ca. 16:30 bis 17 Uhr', lat:47.1311, lng:11.5403},
-  {day:'do', time:'19:00', title:'Bierpong-Turnier, Party, Open End', place:'Hütte', addr:'', note:'Turnierbaum unter „Bierpong“'},
+  {day:'do', time:'19:00', title:'Bierpong-Turnier, Party, Open End', place:'Hütte', addr:'', note:'2 Tische, 10 Min. pro Spiel: Turnier ca. 2 Stunden. Turnierbaum unter „Bierpong“'},
   {day:'fr', time:'10:00', title:'Frühstück und LRG-Auslosung', place:'Hütte', addr:'', note:'Alle 8 Teams müssen bis dahin unter „LRG“ eingetragen sein (oder vom Bierpong übernommen). Dann wird live ausgelost.'},
   {day:'fr', time:'11:30', title:'Taxi zum Bahnhof', place:'Hütte → Bahnhof Matrei am Brenner', addr:'Bahnhof Matrei am Brenner, 6143 Matrei am Brenner', note:'Taxis vorbestellen (siehe Notfall-Block). Ca. 15 Minuten ins Tal.', lat:47.1245, lng:11.4535},
   {day:'fr', time:'12:00', title:'S-Bahn nach Innsbruck', place:'Ab Bahnhof Matrei am Brenner', addr:'', note:'ca. 20 Minuten bis Innsbruck Hbf'},
@@ -326,7 +326,7 @@ const SEED_SCHEDULE = [
   {day:'fr', time:'15:00', title:'Tennis', place:'Tennishalle', addr:'', note:'2,5 Stunden'},
   {day:'fr', time:'19:00', title:'Gemeinsames Abendessen', place:'Innsbruck', addr:'', note:''},
   {day:'fr', time:'21:00', title:'Kneipentour', place:'Innsbruck Altstadt', addr:'Altstadt, Innsbruck', note:'', lat:47.2685, lng:11.3933},
-  {day:'sa', time:'10:00', title:'Abfahrt ab Innsbruck, Heimfahrt', place:'Innsbruck', addr:'', note:''},
+  {day:'sa', time:'10:00', title:'Abfahrt an der Hütte, Heimfahrt', place:'Peerhof, Navis', addr:'Oberweg 22, 6145 Navis, Tirol', note:'Bus holt uns an der Hütte ab', lat:47.1311, lng:11.5403},
 ];
 const SEED_INFO = [
   {title:'Hütte', text:'Bauernhaus „Peerhof“, Oberweg 22, 6145 Navis (Tirol)\nAirbnb: https://www.airbnb.de/rooms/2570629\nStall und Scheune sind tabu\nKurtaxe bar vor Ort (ca. 2 bis 2,60 € pro Person und Nacht)\nHausordnung beachten\nCheck-in ab 16:00 Uhr · Check-out und Ruhezeiten: hier eintragen'},
@@ -342,6 +342,9 @@ R('schedule').on('value', s => { D.schedule = s.val() || {}; if(!seeded && !s.ex
   if(!onErr.shop && s.exists()){ onErr.shop = true; Object.entries(D.schedule).forEach(([id,it]) => { if(/einkaufsstopp/i.test(it.title||'')) R('schedule/' + id).remove(); }); }
   if(!onErr.taxi && s.exists() && !Object.values(D.schedule).some(it => /taxi/i.test(it.title||''))){ onErr.taxi = true; R('schedule/' + uid()).set({...SEED_SCHEDULE.find(it => it.title === 'Taxi zum Bahnhof'), order: 6}); Object.entries(D.schedule).forEach(([id,it]) => { if(it.day === 'fr' && it.time === '12:00' && /aufbruch nach innsbruck/i.test(it.title||'')) R('schedule/' + id).update({title: 'S-Bahn nach Innsbruck', place: 'Ab Bahnhof Matrei am Brenner', note: 'ca. 20 Minuten bis Innsbruck Hbf'}); }); }
   if(!onErr.hut && s.exists()){ onErr.hut = true; Object.entries(D.schedule).forEach(([id,it]) => { if(/ankunft in der hütte/i.test(it.title||'') && (!it.addr || it.place === 'Unsere Hütte')) R('schedule/' + id).update({place: 'Peerhof, Navis', addr: 'Oberweg 22, 6145 Navis, Tirol', lat: it.lat || 47.1311, lng: it.lng || 11.5403}); }); }
+  if(!onErr.navis && s.exists()){ onErr.navis = true; const sb = SEED_SCHEDULE.find(it => it.day === 'sa'); Object.entries(D.schedule).forEach(([id,it]) => {
+      if(it.day === 'sa' && /abfahrt/i.test(it.title||'') && !/navis/i.test((it.place||'') + (it.addr||''))) R('schedule/' + id).update({title: sb.title, place: sb.place, addr: sb.addr, note: it.note || sb.note, lat: sb.lat, lng: sb.lng});
+      if(it.day === 'do' && /bierpong-turnier/i.test(it.title||'') && !/tisch/i.test(it.note||'')) R('schedule/' + id).update({note: SEED_SCHEDULE.find(x => /bierpong-turnier/i.test(x.title)).note}); }); }
   render(); }, onErr);
 R('teams').on('value', s => { D.teams = s.val() || {}; render(); }, onErr);
 R('results').on('value', s => { D.results = s.val() || {}; render(); }, onErr);
