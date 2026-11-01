@@ -364,25 +364,17 @@ R('settings').on('value', s => { D.settings = s.val() || {}; applyHero(); render
 /* Einmalig: Alex und Sven aus der Teilnehmerliste nehmen, damit sie sich selbst neu registrieren */
 const PURGE_NAMES = ['alex','sven'];
 let peopleLoaded = false;
-R('people').on('value', s => { D.people = s.val() || {}; peopleLoaded = true; render(); renderMe(); checkRegistered(); refreshMeChips(); }, onErr);
+R('people').on('value', s => { D.people = s.val() || {}; peopleLoaded = true; render(); renderMe(); checkRegistered(); }, onErr);
 R('settings/purgeOrg1').transaction(cur => cur ? undefined : Date.now(), (err, committed) => {
   if(err || !committed) return;
   ['people','boerse'].forEach(path => R(path).once('value').then(snap => { const u = {}; snap.forEach(c => { if(PURGE_NAMES.includes(((c.val()||{}).name||'').trim().toLowerCase())) u[c.key] = null; }); if(Object.keys(u).length) R(path).update(u); }));
 });
-/* Teilnehmerliste (Stand 1.11.2026), einmalig in die Teilnehmer übernommen. Wer schon mit gleichem Namen
-   oder eindeutigem Vornamen eingetragen ist, wird nicht doppelt angelegt. */
-const ROSTER = ['Alex Abele','Max Hees','Sven Gansauge','Alex Troue','Ferdinand Hees','Timo Kaiser','Michael Neumann','Chris Frank','Chrissi Clark','Pascal Bausback','Christian Franz','Max Frank','Andi Hegenloh','Mario Wirth','Chrissi Tausend','Lukas Hartmann','Chris Hartmann','Tim Grötzinger'];
-const ROSTER_ALIAS = {'Ferdinand Hees': ['ferdi','ferdinand'], 'Andi Hegenloh': ['andi']};
-const firstName = n => (n||'').trim().split(/\s+/)[0].toLowerCase();
-R('settings/rosterSeed1').transaction(cur => cur ? undefined : Date.now(), (err, committed) => {
-  if(err || !committed) return;
-  R('people').once('value').then(snap => { const ex = []; snap.forEach(c => { ex.push(((c.val()||{}).name||'').trim().toLowerCase()); }); const u = {};
-    ROSTER.forEach(n => { if(ex.includes(n.toLowerCase())) return; const f = firstName(n);
-      if(ROSTER.filter(x => firstName(x) === f).length === 1 && ex.includes(f)) return;
-      if((ROSTER_ALIAS[n] || []).some(a => ex.includes(a))) return;
-      u[uid()] = {name: n, phone: '', nick: '', at: firebase.database.ServerValue.TIMESTAMP}; });
-    if(Object.keys(u).length) R('people').update(u); });
-});
+/* Aufräumen: die am 1.11.2026 kurz eingespielte Teilnehmerliste wieder entfernen.
+   Gelöscht werden nur Einträge, die dabei angelegt und seitdem nicht benutzt wurden (kein Spitzname, keine Nummer). */
+const ROSTER_UNDO = ['Alex Abele','Max Hees','Sven Gansauge','Alex Troue','Ferdinand Hees','Timo Kaiser','Michael Neumann','Chris Frank','Chrissi Clark','Pascal Bausback','Christian Franz','Max Frank','Andi Hegenloh','Mario Wirth','Chrissi Tausend','Lukas Hartmann','Chris Hartmann','Tim Grötzinger'];
+R('settings/rosterSeed1').once('value').then(fs => { const t = fs.val(); if(!t) return;
+  R('people').once('value').then(snap => { const u = {}; snap.forEach(c => { const p = c.val() || {}; if(ROSTER_UNDO.includes((p.name||'').trim()) && !p.nick && !p.phone && typeof p.at === 'number' && Math.abs(p.at - t) < 600000) u[c.key] = null; });
+    (Object.keys(u).length ? R('people').update(u) : Promise.resolve()).then(() => R('settings/rosterSeed1').remove()); }); }).catch(() => {});
 /* Wer auf diesem Handy angemeldet ist, aber nicht mehr in der Teilnehmerliste steht, muss sich neu registrieren */
 function checkRegistered(){
   if(!peopleLoaded || !ME || personOf(ME) || document.querySelector('#gate')) return;
@@ -418,12 +410,12 @@ if(tab === 'photos') subWall();
 const peopleList = () => Object.entries(D.people).map(([id,p]) => ({id, ...p})).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'de'));
 function renderMe(){ $('#meBtn').textContent = ME ? `Ich: ${ME}${meNick ? ' „' + meNick + '“' : ''}` : 'Ich bin …'; }
 function openMe(gate){
-  const names = meNames(gate);
+  const names = peopleList().map(p => p.name).filter(Boolean);
   if($('#meBox')) $('#meBox').remove(); if($('#gate')) $('#gate').remove();
   const host = gate ? (() => { const g = document.createElement('div'); g.className = 'gate'; g.id = 'gate'; document.body.appendChild(g); return g; })() : main;
   host.insertAdjacentHTML('afterbegin', `<div class="card stack" id="meBox"><h3>${gate ? 'Willkommen beim JGA von Ferdi' : 'Wer bist du?'}</h3><p class="muted" style="font-size:14px">${gate ? 'Einmal eintragen, dann merkt sich dieses Handy alles. Name und Nummer landen in der Teilnehmerliste.' : 'Damit Fotos, Stimmen und Ausgaben deinen Namen tragen. Wird nur auf diesem Handy gemerkt.'}</p>
-    <div class="stack" id="meChips" data-gate="${gate ? 1 : ''}" style="gap:6px">${meChipsHtml(names, gate)}</div>
-    <div class="editrow"><label class="field">Dein Name<input type="text" id="meName" placeholder="${names.length ? 'oben antippen' : 'Vor- und Nachname'}" value="${esc(ME)}" maxlength="24"></label><label class="field">Handynummer<input type="text" id="mePhone" inputmode="tel" placeholder="+49 …" value="${esc(myPhone())}" maxlength="25"></label></div>
+    <div class="row">${names.map(n => `<button class="btn small ${n===ME?'primary':''}" data-me="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+    <div class="editrow"><label class="field">Dein Name<input type="text" id="meName" placeholder="${names.length ? 'antippen oder eintippen' : 'Vorname'}" value="${esc(ME)}" maxlength="20"></label><label class="field">Handynummer<input type="text" id="mePhone" inputmode="tel" placeholder="+49 …" value="${esc(myPhone())}" maxlength="25"></label></div>
     <div class="stack" style="gap:6px;border-top:1px solid var(--line);padding-top:10px"><span class="eyebrow">Spitzname / Spielername</span>
       <input type="text" id="meNick" placeholder="z. B. Ben Dover oder Gernhart Reinscheissen" value="${esc(meNick)}" maxlength="16">
       <div class="chip-pick" id="nickPick">${NICKS.filter(n => !takenNicks().includes(n.toLowerCase()) || n.toLowerCase() === meNick.toLowerCase()).map(n => `<button data-nick="${esc(n)}" class="${n.toLowerCase()===meNick.toLowerCase()?'on':''}" style="padding:5px 11px;font-size:14px">${esc(n)}</button>`).join('')}</div>
@@ -437,10 +429,9 @@ function openMe(gate){
   $('#meHasTeam').onclick = () => { meTeam = 'has'; ls.set('jga-team', meTeam); $('#meHasTeam').classList.add('on'); $('#meSeeks').classList.remove('on'); $('#meStrength').hidden = true; };
   $('#meSeeks').onclick = () => { meTeam = 'seeks'; ls.set('jga-team', meTeam); $('#meSeeks').classList.add('on'); $('#meHasTeam').classList.remove('on'); $('#meStrength').hidden = false; };
   document.querySelectorAll('#meBox [data-strength]').forEach(b => b.onclick = () => { seekStrength = b.dataset.strength; document.querySelectorAll('#meBox [data-strength]').forEach(x => x.classList.toggle('on', x === b)); });
-  wireMeChips();
+  document.querySelectorAll('#meBox [data-me]').forEach(b => b.onclick = () => { $('#meName').value = b.dataset.me; $('#mePhone').value = phoneOf(b.dataset.me); document.querySelectorAll('#meBox [data-me]').forEach(x => x.classList.toggle('primary', x === b)); });
   $('#meSave').onclick = () => { const n = $('#meName').value.trim();
     const nick = $('#meNick').value.trim();
-    if(n && !personOf(n) && peopleList().some(p => firstName(p.name) === n.toLowerCase())) return toast('Bitte deinen Namen aus der Liste oben antippen.', true);
     if(gate){ if(!n) return toast('Bitte deinen Namen eintragen.', true); if(!nick) return toast('Bitte einen Spitznamen / Spielernamen wählen.', true); if(!meTeam) return toast('Bitte angeben, ob du schon ein Team hast.', true); if(meTeam === 'seeks' && !seekStrength) return toast('Bitte deine Stärke antippen.', true); }
     if(nick && peopleList().some(p => (p.nick||'').toLowerCase() === nick.toLowerCase() && (p.name||'').toLowerCase() !== n.toLowerCase())) return toast('Den Spitznamen / Spielernamen hat schon jemand.', true);
     meNick = nick; ls.set('jga-nick', nick);
@@ -448,11 +439,6 @@ function openMe(gate){
     if($('#gate')) $('#gate').remove(); };
   if(!gate) window.scrollTo({top: $('#meBox').offsetTop - 70, behavior:'smooth'});
 }
-const meNames = gate => peopleList().filter(p => !gate || !p.nick || (p.name||'').toLowerCase() === (ME||'').toLowerCase()).map(p => p.name).filter(Boolean);
-const meChipsHtml = (names, gate) => names.length ? `<span class="eyebrow">${gate ? 'Tipp deinen Namen an' : 'Name antippen'}</span><div class="row">${names.map(n => `<button class="btn small ${n===ME?'primary':''}" data-me="${esc(n)}">${esc(n)}</button>`).join('')}</div>` : '';
-function wireMeChips(){ document.querySelectorAll('#meBox [data-me]').forEach(b => b.onclick = () => { $('#meName').value = b.dataset.me; $('#mePhone').value = phoneOf(b.dataset.me); document.querySelectorAll('#meBox [data-me]').forEach(x => x.classList.toggle('primary', x === b)); }); }
-/* Teilnehmer kommen nach dem Öffnen des Fensters an: Namensliste dann nachfüllen, Eingaben bleiben stehen */
-function refreshMeChips(){ const box = $('#meChips'); if(!box) return; const gate = !!box.dataset.gate; const sel = $('#meName') ? $('#meName').value : ''; const names = meNames(gate); box.innerHTML = meChipsHtml(names, gate); wireMeChips(); if($('#meName')) $('#meName').placeholder = names.length ? 'oben antippen' : 'Vor- und Nachname'; document.querySelectorAll('#meBox [data-me]').forEach(x => x.classList.toggle('primary', x.dataset.me === sel)); }
 $('#meBtn').onclick = () => openMe(false);
 /* Erstes Öffnen: Eintragen ist Pflicht (wird pro Handy gemerkt) */
 if(!ME) setTimeout(() => { if(!ME && !document.querySelector('#gate')) openMe(true); }, 400);
@@ -1030,7 +1016,7 @@ function renderOrga(){
     <p class="muted" style="font-size:14px">Orga-Team: <a href="todo.html" style="color:var(--pine);font-weight:500">Orga-Liste öffnen</a> (wer übernimmt was, abhaken)</p>
     <section class="card stack"><div class="sub-h"><h2>Teilnehmer</h2><span class="muted" style="font-size:13px">${people.length} Personen</span></div>
       ${people.map(p => edit ? `<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><input type="text" class="grow" data-person="${p.id}" data-k="name" value="${esc(p.name||'')}" placeholder="Name"><input type="text" class="grow" data-person="${p.id}" data-k="phone" value="${esc(p.phone||'')}" placeholder="Handy" inputmode="tel"><button class="btn small danger" data-pdel2="${p.id}">✕</button></div>`
-        : `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><strong>${esc(p.name)}${p.nick ? ` <span class="muted" style="font-weight:400">„${esc(p.nick)}“</span>` : (!p.phone ? ' <span class="muted" style="font-weight:400;font-size:13px">noch nicht angemeldet</span>' : '')}</strong>${p.phone ? `<span style="font-variant-numeric:tabular-nums;user-select:all">${esc(p.phone)}</span>` : ''}</div>`).join('') || '<p class="muted">Noch niemand eingetragen.</p>'}
+        : `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><strong>${esc(p.name)}${p.nick ? ` <span class="muted" style="font-weight:400">„${esc(p.nick)}“</span>` : ''}</strong>${p.phone ? `<span style="font-variant-numeric:tabular-nums;user-select:all">${esc(p.phone)}</span>` : ''}</div>`).join('') || '<p class="muted">Noch niemand eingetragen.</p>'}
       <div class="row"><input type="text" id="personNew" class="grow" placeholder="Name" maxlength="20"><button class="btn primary" id="personAdd">+</button></div>
       <p class="muted" style="font-size:13px">Handynummer über „Bearbeiten“ ergänzen.</p>
     </section>
