@@ -84,11 +84,17 @@ function overview(){
     <div class="row"><span class="notice">Bierpong: ${D.draw ? 'ausgelost' : 'nicht ausgelost'} · ${n('results')} Ergebnisse</span><span class="notice">LRG: ${D.tennisDraw ? 'ausgelost' : 'nicht ausgelost'} · ${n('tennisResults')} Ergebnisse</span><span class="notice">„Wie lange“: ${s.arrivedAt ? 'ausgeblendet (angekommen)' : 'aktiv'}</span></div>
     <p class="muted" style="font-size:13px">Admin-PIN: ${s.adminPin ? 'gesetzt' : 'Standard (' + DEFAULT_PIN + ') · unter Einstellungen ändern'}</p></div>`;
 }
+/* Teilnehmerliste Stand 1.11.2026 (wie in der App) */
+const ROSTER = ['Alex Abele','Max Hees','Sven Gansauge','Alex Troue','Ferdinand Hees','Timo Kaiser','Michael Neumann','Chris Frank','Chrissi Clark','Pascal Bausback','Christian Franz','Max Frank','Andi Hegenloh','Mario Wirth','Chrissi Tausend','Lukas Hartmann','Chris Hartmann','Tim Grötzinger'];
 function people(){
   const list = entries('people').sort((a,b) => (a.name||'').localeCompare(b.name||'','de'));
+  const onList = n => ROSTER.some(r => r.toLowerCase() === (n||'').trim().toLowerCase());
+  const off = list.filter(p => !onList(p.name)), missing = ROSTER.filter(r => !list.some(p => (p.name||'').trim().toLowerCase() === r.toLowerCase()));
   $('#body').innerHTML = `<div class="card"><div class="row between"><h2>Teilnehmer (${list.length})</h2><button class="btn small" id="dedupe">Doppelte Namen zusammenführen</button></div>
+    ${off.length ? `<p class="muted" style="font-size:14px">Nicht auf der Teilnehmerliste: <b>${off.map(p => esc(p.name||'(leer)')).join(', ')}</b>. Auf den vollen Namen umbenennen und „Doppelte Namen zusammenführen“ drücken, oder löschen.</p>` : ''}
+    ${missing.length ? `<p class="muted" style="font-size:14px">Von der Liste fehlen: ${missing.map(esc).join(', ')}</p>` : ''}
     <div class="wrap"><table><thead><tr><th>Name</th><th>Spitzname</th><th>Handy</th><th></th></tr></thead><tbody>
-    ${list.map(p => `<tr><td><input type="text" data-p="${p.id}" data-k="name" value="${esc(p.name||'')}"></td><td><input type="text" data-p="${p.id}" data-k="nick" value="${esc(p.nick||'')}"></td><td><input type="text" data-p="${p.id}" data-k="phone" value="${esc(p.phone||'')}"></td><td><button class="btn small danger" data-del="people/${p.id}">✕</button></td></tr>`).join('')}
+    ${list.map(p => `<tr><td><input type="text" data-p="${p.id}" data-k="name" value="${esc(p.name||'')}" ${onList(p.name) ? '' : 'style="border-color:#c0392b"'}></td><td><input type="text" data-p="${p.id}" data-k="nick" value="${esc(p.nick||'')}"></td><td><input type="text" data-p="${p.id}" data-k="phone" value="${esc(p.phone||'')}"></td><td><button class="btn small danger" data-del="people/${p.id}">✕</button></td></tr>`).join('')}
     </tbody></table></div>
     <div class="row"><input type="text" id="newP" class="grow" placeholder="Neuer Teilnehmer"><button class="btn primary" id="addP">+</button></div></div>`;
   wireInputs('p', 'people'); wireDel();
