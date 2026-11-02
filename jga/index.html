@@ -162,6 +162,11 @@ tr.q td:first-child .nm::after{content:" ↑";color:var(--ok)}
 .bal{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-variant-numeric:tabular-nums}
 .bal .pos{color:var(--ok);font-weight:700} .bal .neg{color:var(--bad);font-weight:700}
 .settle{padding:8px 10px;border-radius:10px;background:var(--soft);font-size:15px}
+.mine{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:560px){ .mine{grid-template-columns:1fr 1fr} }
+.mine .settle{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mine .owe{background:color-mix(in srgb, var(--bad) 10%, var(--surface))}
+.mine .get{background:color-mix(in srgb, var(--ok) 12%, var(--surface))}
 /* Umfragen */
 .poll .opt{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;cursor:pointer;position:relative;overflow:hidden}
 .poll .opt .fill{position:absolute;inset:0;background:color-mix(in srgb,var(--amber) 22%,transparent);z-index:0}
@@ -986,30 +991,41 @@ function renderMusik(){
 
 /* ---------- Orga: Kasse, Teilnehmer ---------- */
 const eur = n => (Math.round(n*100)/100).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+/* Ferdi ist der Junggeselle: zahlt nichts und taucht in der Kasse nie auf, egal unter welchem Namen er angemeldet ist */
+const isGroom = n => /\bferd/i.test(n || '');
+const sameName = (a, b) => (a||'').trim().toLowerCase() === (b||'').trim().toLowerCase();
 function settlement(){
-  const people = peopleList(); if(!people.length) return {bal: [], moves: []};
+  const people = peopleList().filter(p => p.name && !isGroom(p.name)); if(!people.length) return {bal: [], moves: [], total: 0};
   const bal = {}; people.forEach(p => bal[p.name] = 0);
   const ex = Object.values(D.expenses);
-  for(const e of ex){ const amt = +e.amount || 0; if(!amt) continue; const sharers = (e.forAll === false && e.for && e.for.length) ? e.for : people.map(p => p.name); if(!(e.payer in bal)) bal[e.payer] = 0; bal[e.payer] += amt; sharers.forEach(n => { if(!(n in bal)) bal[n] = 0; bal[n] -= amt / sharers.length; }); }
+  for(const e of ex){ const amt = +e.amount || 0; if(!amt) continue; let sharers = (e.forAll === false && e.for && e.for.length) ? e.for.filter(n => !isGroom(n)) : people.map(p => p.name); if(!sharers.length) sharers = people.map(p => p.name); if(!(e.payer in bal)) bal[e.payer] = 0; bal[e.payer] += amt; sharers.forEach(n => { if(!(n in bal)) bal[n] = 0; bal[n] -= amt / sharers.length; }); }
   const cred = Object.entries(bal).filter(([,v]) => v > 0.005).map(([n,v]) => ({n, v})).sort((a,b) => b.v - a.v);
   const debt = Object.entries(bal).filter(([,v]) => v < -0.005).map(([n,v]) => ({n, v: -v})).sort((a,b) => b.v - a.v);
   const moves = []; let i = 0, j = 0;
   while(i < debt.length && j < cred.length){ const m = Math.min(debt[i].v, cred[j].v); moves.push({from: debt[i].n, to: cred[j].n, amt: m}); debt[i].v -= m; cred[j].v -= m; if(debt[i].v < 0.005) i++; if(cred[j].v < 0.005) j++; }
-  return {bal: Object.entries(bal).map(([n,v]) => ({n, v})).sort((a,b) => b.v - a.v), moves, total: ex.reduce((a,e) => a + (+e.amount||0), 0)};
+  return {bal: Object.entries(bal).map(([n,v]) => ({n, v})).sort((a,b) => b.v - a.v), moves, total: ex.filter(e => e.kind !== 'pay').reduce((a,e) => a + (+e.amount||0), 0)};
 }
 function renderOrga(){
   const people = peopleList();
   const ex = Object.entries(D.expenses).map(([id,e]) => ({id, ...e})).sort((a,b) => (b.at||0)-(a.at||0));
   const st = settlement();
-  const names = people.map(p => p.name);
+  const names = people.map(p => p.name).filter(n => n && !isGroom(n));
+  const owe = st.moves.map((m,i) => ({...m, i})).filter(m => sameName(m.from, ME)), get = st.moves.map((m,i) => ({...m, i})).filter(m => sameName(m.to, ME));
+  const mine = !ME ? '<p class="muted">Oben rechts „Ich bin …“ wählen, dann steht hier, wem du was schuldest und wer dir was schuldet.</p>'
+    : isGroom(ME) ? '<div class="settle">Du bist der Junggeselle. Du zahlst an diesem Wochenende nichts.</div>'
+    : `<div class="mine">
+        <div class="stack" style="gap:6px"><span class="eyebrow">Du schuldest</span>${owe.length ? owe.map(m => `<div class="settle owe"><span><strong>${esc(m.to)}</strong> ${eur(m.amt)}</span><button class="btn small" data-pay="${m.i}">Bezahlt</button></div>`).join('') : '<p class="muted" style="font-size:14px">niemandem etwas</p>'}</div>
+        <div class="stack" style="gap:6px"><span class="eyebrow">Dir schuldet</span>${get.length ? get.map(m => `<div class="settle get"><span><strong>${esc(m.from)}</strong> ${eur(m.amt)}</span><button class="btn small" data-pay="${m.i}">Erhalten</button></div>`).join('') : '<p class="muted" style="font-size:14px">niemand etwas</p>'}</div>
+      </div>`;
   main.innerHTML = `${editBtn()}
     <section class="card stack"><div class="sub-h"><h2>Kasse</h2><span class="muted" style="font-size:13px">${eur(st.total||0)} gesamt</span></div>
-      ${st.moves.length ? `<div class="stack" style="gap:6px">${st.moves.map(m => `<div class="settle"><strong>${esc(m.from)}</strong> zahlt <strong>${eur(m.amt)}</strong> an <strong>${esc(m.to)}</strong></div>`).join('')}</div>` : '<p class="muted">Noch keine Ausgaben. Wer etwas auslegt, trägt es hier ein; die Umlage rechnet sich selbst.</p>'}
+      ${mine}
+      ${st.moves.length ? `<details><summary class="muted" style="cursor:pointer;font-size:14px">Alle offenen Beträge (${st.moves.length})</summary><div class="stack" style="gap:6px;margin-top:8px">${st.moves.map(m => `<div class="settle"><strong>${esc(m.from)}</strong> zahlt <strong>${eur(m.amt)}</strong> an <strong>${esc(m.to)}</strong></div>`).join('')}</div></details>` : (st.total ? '<p class="muted" style="font-size:14px">Alles beglichen.</p>' : '<p class="muted">Noch keine Ausgaben. Wer etwas auslegt, trägt es hier ein und wählt, für wen es war. Die Umlage rechnet sich selbst, Ferdi zahlt nichts.</p>')}
       ${st.bal.length && st.total ? `<details><summary class="muted" style="cursor:pointer;font-size:14px">Saldo je Person</summary><div class="bal" style="margin-top:8px">${st.bal.map(b => `<span>${esc(b.n)}</span><span class="${b.v>0.005?'pos':b.v<-0.005?'neg':''}">${b.v>0?'+':''}${eur(b.v)}</span>`).join('')}</div></details>` : ''}
-      ${ex.length ? `<details ${edit?'open':''}><summary class="muted" style="cursor:pointer;font-size:14px">${ex.length} Ausgabe${ex.length===1?'':'n'}</summary>${ex.map(e => `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><strong>${esc(e.desc)}</strong><div class="muted" style="font-size:12px">${esc(e.payer)} · ${e.forAll === false && e.for ? 'für ' + esc(e.for.join(', ')) : 'für alle'}</div></div><strong style="font-variant-numeric:tabular-nums">${eur(+e.amount||0)}</strong>${edit ? `<button class="btn small danger" data-edel="${e.id}">✕</button>` : ''}</div>`).join('')}</details>` : ''}
+      ${ex.length ? `<details ${edit?'open':''}><summary class="muted" style="cursor:pointer;font-size:14px">${ex.length} Ausgabe${ex.length===1?'':'n'}</summary>${ex.map(e => `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><strong>${esc(e.desc)}</strong><div class="muted" style="font-size:12px">${e.kind === 'pay' ? 'Rückzahlung' : `${esc(e.payer)} · ${e.forAll === false && e.for ? 'für ' + esc(e.for.filter(n => !isGroom(n)).join(', ')) : 'für alle außer Ferdi'}`}</div></div><strong style="font-variant-numeric:tabular-nums">${eur(+e.amount||0)}</strong>${edit ? `<button class="btn small danger" data-edel="${e.id}">✕</button>` : ''}</div>`).join('')}</details>` : ''}
       <div class="stack" style="gap:6px;border-top:1px solid var(--line);padding-top:10px"><span class="eyebrow">Ausgabe eintragen</span>
         <div class="editrow"><input type="text" id="exDesc" placeholder="Wofür, z. B. Bus" maxlength="60"><input type="number" inputmode="decimal" step="0.01" id="exAmt" placeholder="Betrag in €"></div>
-        <div class="editrow"><select id="exPayer">${names.map(n => `<option ${n===ME?'selected':''}>${esc(n)}</option>`).join('')}${names.length ? '' : '<option>Erst Teilnehmer eintragen</option>'}</select><select id="exFor"><option value="all">für alle</option><option value="some">nur für bestimmte …</option></select></div>
+        <div class="editrow"><label class="field">Bezahlt hat<select id="exPayer">${names.map(n => `<option ${sameName(n, ME)?'selected':''}>${esc(n)}</option>`).join('')}${names.length ? '' : '<option>Erst Teilnehmer eintragen</option>'}</select></label><label class="field">Für wen?<select id="exFor"><option value="all">für alle (außer Ferdi)</option><option value="some">nur für bestimmte Leute …</option></select></label></div>
         <div class="row" id="exForList" hidden>${names.map(n => `<label class="btn small" style="cursor:pointer"><input type="checkbox" data-exfor="${esc(n)}" style="accent-color:var(--pine)"> ${esc(n)}</label>`).join('')}</div>
         <div><button class="btn primary small" id="exAdd" ${names.length?'':'disabled'}>+ Ausgabe</button></div></div>
     </section>
@@ -1027,6 +1043,8 @@ function renderOrga(){
     const some = $('#exFor').value === 'some'; const forList = Array.from(main.querySelectorAll('[data-exfor]:checked')).map(c => c.dataset.exfor); if(some && !forList.length) return toast('Für wen? Mindestens eine Person anhaken.', true);
     R('expenses/' + uid()).set({desc, amount, payer: $('#exPayer').value, forAll: !some, for: some ? forList : null, at: firebase.database.ServerValue.TIMESTAMP}).then(() => toast('Eingetragen')).catch(e => toast(e.message, true)); };
   main.querySelectorAll('[data-edel]').forEach(b => b.onclick = () => { if(b.dataset.armed){ R('expenses/' + b.dataset.edel).remove(); return; } b.dataset.armed = 1; b.textContent = 'Sicher?'; });
+  main.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => { const m = st.moves[+b.dataset.pay]; if(!m) return; if(!b.dataset.armed){ b.dataset.armed = 1; b.textContent = 'Sicher?'; return; }
+    R('expenses/' + uid()).set({kind: 'pay', desc: `${m.from} hat ${m.to} bezahlt`, amount: Math.round(m.amt*100)/100, payer: m.from, forAll: false, for: [m.to], by: ME, at: firebase.database.ServerValue.TIMESTAMP}).then(() => toast('Als bezahlt eingetragen')).catch(e => toast(e.message, true)); });
   $('#personAdd').onclick = () => { const n = $('#personNew').value.trim(); if(!n) return; if(people.some(p => (p.name||'').toLowerCase() === n.toLowerCase())) return toast('Gibt es schon.', true); R('people/' + uid()).set({name: n, at: firebase.database.ServerValue.TIMESTAMP}); };
   main.querySelectorAll('[data-person]').forEach(inp => inp.oninput = () => { const p = 'people/' + inp.dataset.person + '/' + inp.dataset.k; saveSoon(p, p, inp.value.trim()); });
   main.querySelectorAll('[data-pdel2]').forEach(b => b.onclick = () => { if(b.dataset.armed){ R('people/' + b.dataset.pdel2).remove(); return; } b.dataset.armed = 1; b.textContent = 'Sicher?'; });

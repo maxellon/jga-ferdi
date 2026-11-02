@@ -134,7 +134,7 @@ function musik(){
   document.querySelectorAll('[data-pclose]').forEach(b => b.onclick = () => save('polls/' + b.dataset.pclose + '/closed', !(D.polls[b.dataset.pclose]||{}).closed));
 }
 function money(){
-  const ex = entries('expenses').sort((a,b) => (b.at||0)-(a.at||0)); const total = ex.reduce((a,e) => a + (+e.amount||0), 0);
+  const ex = entries('expenses').sort((a,b) => (b.at||0)-(a.at||0)); const total = ex.filter(e => e.kind !== 'pay').reduce((a,e) => a + (+e.amount||0), 0);
   $('#body').innerHTML = `<div class="card"><div class="row between"><h2>Kasse (${ex.length} · ${total.toFixed(2).replace('.',',')} €)</h2><button class="btn small danger" data-reset="expenses" data-label="Alle Ausgaben löschen?">Leeren</button></div>
     <div class="wrap"><table><thead><tr><th>Wofür</th><th>Betrag</th><th>Zahler</th><th>Für</th><th></th></tr></thead><tbody>${ex.map(e => `<tr><td><input type="text" data-p="${e.id}" data-k="desc" data-root="expenses" value="${esc(e.desc||'')}"></td><td><input type="number" step="0.01" data-p="${e.id}" data-k="amount" data-root="expenses" data-num="1" value="${e.amount ?? ''}"></td><td><input type="text" data-p="${e.id}" data-k="payer" data-root="expenses" value="${esc(e.payer||'')}"></td><td>${e.forAll === false && e.for ? esc(e.for.join(', ')) : 'alle'}</td><td><button class="btn small danger" data-del="expenses/${e.id}">✕</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">keine</td></tr>'}</tbody></table></div></div>`;
   wireInputs('p'); wireDel(); wireReset();
