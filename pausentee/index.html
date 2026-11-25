@@ -93,7 +93,13 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted
 .pill.gold{background:#fff3c4;color:#7a5c00}
 .mini{display:flex;align-items:center;gap:4px}
 .mini button{width:30px;height:30px;border-radius:50%;border:0;background:var(--bg);font-size:18px;font-weight:700;line-height:1;padding:0}
-.mini b{min-width:18px;text-align:center;font-variant-numeric:tabular-nums}
+.mini b{min-width:22px;text-align:center;font-variant-numeric:tabular-nums;font-size:18px}
+.mrow.up{display:block}
+.mrow.up .mini{justify-content:center;gap:6px;margin-top:10px}
+.mrow.up .mini img{width:22px;height:22px;object-fit:contain}
+.q{color:#c7c7cc}
+.chipsel{flex-wrap:wrap}
+.adm .mrow{flex-wrap:wrap}
 details.m summary{list-style:none;cursor:pointer}
 details.m summary::-webkit-details-marker{display:none}
 .tips{margin:6px 0 4px;font-size:14px}
@@ -558,7 +564,7 @@ async function doLogin(name, isNew, needPin){
       if (!u || u.pin !== h) { err.textContent = 'Falsche PIN.'; $('#lgo').disabled = false; return; }
     }
     me = k; localStorage.setItem('pausentee-me', k); loginPick = null;
-    view = 'spiele'; render(); toast(isNew ? 'Willkommen in der Runde!' : 'Angemeldet');
+    view = 'spiele'; window.scrollTo(0, 0); render(); toast(isNew ? 'Willkommen in der Runde!' : 'Angemeldet');
   } catch (e2) { err.textContent = 'Fehler: ' + e2.message; $('#lgo').disabled = false; }
 }
 
@@ -653,9 +659,9 @@ function tipStepper(m){
   const saved = tipOf(m.id, me), pending = !!draft[m.id];
   const jo = jokerElsewhere(m), jokerUsed = !t.j && jo && jo.t <= now();
   return `<div class="tip">
-      <div class="step"><button data-s="${m.id}|h|-1" aria-label="weniger">−</button><b>${t.h ?? '–'}</b><button data-s="${m.id}|h|1" aria-label="mehr">+</button></div>
+      <div class="step"><button data-s="${m.id}|h|-1" aria-label="weniger">−</button><b class="${t.h == null ? 'q' : ''}">${t.h ?? '?'}</b><button data-s="${m.id}|h|1" aria-label="mehr">+</button></div>
       <div class="colon">:</div>
-      <div class="step"><button data-s="${m.id}|a|-1" aria-label="weniger">−</button><b>${t.a ?? '–'}</b><button data-s="${m.id}|a|1" aria-label="mehr">+</button></div>
+      <div class="step"><button data-s="${m.id}|a|-1" aria-label="weniger">−</button><b class="${t.a == null ? 'q' : ''}">${t.a ?? '?'}</b><button data-s="${m.id}|a|1" aria-label="mehr">+</button></div>
     </div>
     <div class="tipstate ${saved && !pending ? 'ok' : ''}">${pending ? 'Speichert …' : saved ? `✓ Dein Tipp ${saved.h}:${saved.a} ist gespeichert` : 'Noch nicht getippt'}</div>
     <button class="joker ${t.j ? 'on' : ''}" data-j="${m.id}" ${jokerUsed ? 'disabled' : ''}>🃏 ${t.j ? 'Joker aktiv: doppelte Punkte' : jokerUsed ? `Joker der ${halfName(m.t)} verbraucht` : jo ? `Joker hierher holen (liegt bei ${esc(opp(jo).name)})` : `Joker setzen (1× pro ${halfName(m.t)})`}</button>`;
@@ -695,7 +701,7 @@ function allTipsList(m, r, provisional){
 function vSpiele(ms, cur, E){
   const c = counted();
   const lv = c.filter(isLive);
-  const up = c.filter(m => m.t > now() && !result(m));
+  const up = c.filter(m => m.t > now() && !result(m) && !isLive(m));
   const done = c.filter(m => result(m)).reverse();
   let h = '';
   if (espnErr && !espnOk) h += `<div class="card small muted">Spielplan gerade nicht erreichbar, es werden die gespeicherten Spiele gezeigt.</div>`;
@@ -725,15 +731,14 @@ function vSpiele(ms, cur, E){
 }
 function upcomingRow(m){
   const t = myTip(m.id) || {}, o = opp(m);
-  return `<div class="mrow" style="flex-wrap:wrap">
-    <img class="cl" src="${compLogo(m.comp)}" alt="">
-    <div class="grow"><div class="small muted ell">${esc(fmtWhen(m))} · ${m.vfbHome ? 'Heim' : 'Auswärts'}</div>
-      <div class="row" style="gap:8px;margin-top:2px"><img class="lg" src="${esc(o.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b class="ell">${m.vfbHome ? 'gegen' : 'bei'} ${esc(o.name)}</b>${t.j ? ' 🃏' : ''}</div></div>
-    <div class="mini">
-      <button data-s="${m.id}|h|-1">−</button><b>${t.h ?? '–'}</b><button data-s="${m.id}|h|1">+</button>
-      <span class="colon" style="font-size:18px">:</span>
-      <button data-s="${m.id}|a|-1">−</button><b>${t.a ?? '–'}</b><button data-s="${m.id}|a|1">+</button>
-    </div></div>`;
+  return `<div class="mrow up">
+    <div class="row"><img class="cl" src="${compLogo(m.comp)}" alt=""><img class="lg" src="${esc(o.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="grow"><b class="ell" style="display:block">${m.vfbHome ? 'gegen' : 'bei'} ${esc(o.name)}${t.j ? ' 🃏' : ''}</b><div class="small muted ell">${esc(fmtWhen(m))} · ${m.vfbHome ? 'Heim' : 'Auswärts'}</div></div></div>
+    <div class="mini"><img src="${esc(m.home.logo)}" alt="" loading="lazy">
+      <button data-s="${m.id}|h|-1" aria-label="weniger">−</button><b class="${t.h == null ? 'q' : ''}">${t.h ?? '?'}</b><button data-s="${m.id}|h|1" aria-label="mehr">+</button>
+      <span class="colon" style="font-size:18px;margin:0 4px">:</span>
+      <button data-s="${m.id}|a|-1" aria-label="weniger">−</button><b class="${t.a == null ? 'q' : ''}">${t.a ?? '?'}</b><button data-s="${m.id}|a|1" aria-label="mehr">+</button>
+      <img src="${esc(m.away.logo)}" alt="" loading="lazy"></div></div>`;
 }
 function doneRow(m, E){
   const r = result(m), h = E.hist.find(x => x.m.id === m.id), mine = h && h.per[me];
@@ -866,7 +871,7 @@ function vSpieler(ms, cur, E){
     for (const v of Object.values(vs)) (v.p || []).forEach((p, i) => { if (!p) return; const a = agg[p.id] || (agg[p.id] = {n: p.n, pts: 0, first: 0, votes: 0}); a.pts += 3 - i; a.votes++; if (i === 0) a.first++; a.n = p.n; });
   }
   const list = Object.values(agg).sort((a, b) => b.pts - a.pts || b.first - a.first || a.n.localeCompare(b.n, 'de'));
-  h += `<h2>Spieler der Saison</h2><div class="card" style="padding:8px 12px">${list.length ? `<table class="rank">${list.map((p, i) => `<tr><td class="pl">${i === 0 ? '⭐' : i + 1}</td><td><span class="nm">${esc(p.n)}</span><div class="vn">${p.first}× Platz 1 · ${p.votes} Stimmen</div></td><td class="pts">${p.pts}</td></tr>`).join('')}</table>` : '<div class="empty">Noch keine Stimmen.</div>'}</div>`;
+  h += `<h2>Spieler der Saison</h2><div class="card" style="padding:8px 12px">${list.length ? `<table class="rank">${list.map((p, i) => `<tr><td class="pl">${i === 0 ? '⭐' : i + 1}</td><td><span class="nm">${esc(p.n)}</span><div class="vn">${p.first}× Platz 1 · ${p.votes} ${p.votes === 1 ? 'Stimme' : 'Stimmen'}</div></td><td class="pts">${p.pts}</td></tr>`).join('')}</table>` : '<div class="empty">Noch keine Stimmen.</div>'}</div>`;
   return h;
 }
 function voteResults(m, votes, mine){
@@ -880,7 +885,8 @@ function voteResults(m, votes, mine){
 
 /* ---------- Reiter Wettbewerb ---------- */
 function vWettbewerb(ms, cur, E){
-  const comps = [...new Set(ms.filter(m => m.t >= SEASON_START).map(m => m.comp))].filter(c => COMPS[c]);
+  const have = new Set(ms.filter(m => m.t >= SEASON_START).map(m => m.comp));
+  const comps = Object.keys(COMPS).filter(c => have.has(c));
   if (!compSel || !comps.includes(compSel)) compSel = (cur && cur.comp) || comps[0] || 'ger.1';
   let h = `<div class="chipsel" style="margin-top:14px">${comps.map(c => `<button class="${c === compSel ? 'on' : ''}" data-c="${c}">${compLogo(c) ? `<img src="${compLogo(c)}" alt="">` : ''}${esc(compName(c))}</button>`).join('')}</div>`;
   const cm = ms.filter(m => m.comp === compSel);
@@ -997,7 +1003,7 @@ async function renderAdmin(){
       <button class="btn small" data-save="${m.id}">Setzen</button>${r && r.src === 'manual' ? `<button class="btn sec small" data-auto="${m.id}">Automatik</button>` : ''}</div></div>`; }).join('') : '<div class="empty">Noch kein gewertetes Spiel angepfiffen.</div>'}
   </div>
   <h2>Teilnehmer</h2><div class="card adm small">${users().sort((a, b) => a.name.localeCompare(b.name, 'de')).map(u => `<div class="mrow"><div class="grow"><b>${esc(u.name)}</b>${u.vorname ? ' · ' + esc(u.vorname) : ''}<div class="muted">dabei seit ${u.joinedAt ? esc(fmtDay(u.joinedAt)) : '?'}${u.pin ? '' : ' · PIN zurückgesetzt'}</div></div>
-    <button class="btn sec small" data-pin="${u.k}">PIN zurücksetzen</button><button class="btn sec small" data-del="${u.k}">Löschen</button></div>`).join('') || '<div class="empty">Noch niemand.</div>'}</div>
+    <div class="row" style="gap:6px"><button class="btn sec small" data-pin="${u.k}">Neue PIN</button><button class="btn sec small" data-del="${u.k}">Löschen</button></div></div>`).join('') || '<div class="empty">Noch niemand.</div>'}</div>
   <button class="btn sec" style="margin-top:12px" id="aout">Admin verlassen</button>`;
   main.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
     const id = b.dataset.save, h = parseInt($('#h_' + id).value, 10), a = parseInt($('#a_' + id).value, 10);
