@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pausentee · VfB-Tipprunde</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pausentee">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e2001a">
+<style>
+:root{
+  --red:#e2001a; --red-dark:#b30015; --red-soft:#fdecee;
+  --ink:#1c1c1e; --muted:#6e6e73; --line:#e9e5e1; --bg:#f5f3f0; --card:#fff;
+  --ok:#1f8a4c; --ok-soft:#e6f4ec; --no:#9a9aa0; --gold:#c99a06;
+  --r:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+img{display:block}
+a{color:var(--red)}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px 110px}
+
+/* Kopf mit Brustring */
+.top{background:#fff;padding-top:env(safe-area-inset-top)}
+.ring{background:var(--red);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px;margin-top:14px;box-shadow:0 2px 0 var(--red-dark)}
+.ring .crest{width:44px;height:44px;background:#fff;border-radius:50%;padding:4px;flex:none}
+.ring h1{margin:0;font-size:24px;letter-spacing:.5px;font-weight:800;line-height:1}
+.ring small{display:block;font-size:12px;opacity:.9;margin-top:3px;letter-spacing:.3px}
+.ring .grow{flex:1;min-width:0}
+.ring .comp{width:40px;height:40px;background:#fff;border-radius:10px;padding:4px;flex:none;object-fit:contain}
+.top .sub{height:14px}
+
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:22px 4px 8px;font-weight:700}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card.hl{border:2px solid var(--red)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.center{text-align:center}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Spielkarte */
+.meta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.meta img{width:22px;height:22px;object-fit:contain}
+.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin:14px 0 6px}
+.team{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.team img{width:56px;height:56px;object-fit:contain}
+.team span{font-weight:650;font-size:14px;line-height:1.2}
+.score{font-size:34px;font-weight:800;letter-spacing:1px;min-width:80px;text-align:center;font-variant-numeric:tabular-nums}
+.vs{font-size:15px;color:var(--muted);font-weight:700;text-align:center;min-width:80px}
+.cd{text-align:center;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums;margin-top:6px}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--red);font-weight:800;font-size:13px;letter-spacing:.5px}
+.live:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--red);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+/* Tippen */
+.tip{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-top:14px}
+.step{display:flex;align-items:center;justify-content:center;gap:6px}
+.step button{width:42px;height:42px;border-radius:50%;border:0;background:var(--bg);font-size:24px;font-weight:700;line-height:1}
+.step button:active{background:var(--line)}
+.step b{font-size:30px;min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.colon{font-size:26px;font-weight:800;color:var(--muted)}
+.tipstate{text-align:center;font-size:13px;margin-top:8px;min-height:18px}
+.tipstate.ok{color:var(--ok)}
+.joker{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px auto 0;border:1.5px dashed var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:650}
+.joker.on{border:1.5px solid var(--gold);background:#fff8e1;color:#7a5c00}
+.joker[disabled]{opacity:.45}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--red);color:#fff;width:100%}
+.btn.sec{background:var(--bg);color:var(--ink)}
+.btn.wa{background:#25d366;color:#fff}
+.btn.small{width:auto;padding:8px 12px;font-size:14px;border-radius:10px}
+.btn[disabled]{opacity:.5}
+.who{font-size:13px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+
+/* Kompakte Spielzeilen */
+.mrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0}
+.mrow .lg{width:30px;height:30px;object-fit:contain;flex:none}
+.mrow .cl{width:18px;height:18px;object-fit:contain;flex:none;opacity:.9}
+.mrow .res{font-weight:800;font-variant-numeric:tabular-nums;min-width:44px;text-align:center}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--bg);color:var(--muted);white-space:nowrap}
+.pill.red{background:var(--red);color:#fff}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.gold{background:#fff3c4;color:#7a5c00}
+.mini{display:flex;align-items:center;gap:4px}
+.mini button{width:30px;height:30px;border-radius:50%;border:0;background:var(--bg);font-size:18px;font-weight:700;line-height:1;padding:0}
+.mini b{min-width:18px;text-align:center;font-variant-numeric:tabular-nums}
+details.m summary{list-style:none;cursor:pointer}
+details.m summary::-webkit-details-marker{display:none}
+.tips{margin:6px 0 4px;font-size:14px}
+.tips .t{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px dashed var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{font-size:12px;border-radius:8px;padding:3px 8px;background:var(--bg);color:var(--no);font-weight:650}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.j{background:#fff3c4;color:#7a5c00}
+.chip.sum{background:var(--ink);color:#fff}
+
+/* Tabelle */
+table{width:100%;border-collapse:collapse}
+.rank td{padding:10px 4px;border-top:1px solid var(--line);vertical-align:middle}
+.rank tr:first-child td{border-top:0}
+.rank .pl{width:28px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.rank .ar{width:18px;text-align:center;font-size:12px;font-weight:800}
+.ar.up{color:var(--ok)} .ar.down{color:var(--red)} .ar.eq{color:#c7c7cc}
+.rank .pts{text-align:right;font-weight:800;font-size:18px;width:46px;font-variant-numeric:tabular-nums}
+.rank .ex{text-align:right;width:38px;color:var(--muted);font-size:13px}
+.rank tr.me td{background:var(--red-soft)}
+.rank tr.me td:first-child{border-radius:10px 0 0 10px}
+.rank tr.me td:last-child{border-radius:0 10px 10px 0}
+.nm{font-weight:700}
+.vn{font-size:12px;color:var(--muted)}
+.last{font-size:12px;color:var(--muted);margin-top:2px}
+.badges{margin-left:4px}
+
+.league td{padding:7px 4px;border-top:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.league th{font-size:11px;color:var(--muted);text-align:right;padding:0 4px 6px;font-weight:700}
+.league th:nth-child(2){text-align:left}
+.league td.n{text-align:right;width:34px}
+.league td.p{width:30px;text-align:center;font-weight:700;border-left:4px solid transparent}
+.league img{width:22px;height:22px;object-fit:contain}
+.league tr.vfb td{background:var(--red-soft);font-weight:800}
+.chipsel{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px}
+.chipsel button{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:650;white-space:nowrap}
+.chipsel button.on{border-color:var(--red);color:var(--red)}
+.chipsel img{width:18px;height:18px;object-fit:contain}
+
+/* Spieler */
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pbtn{position:relative;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 10px 10px 12px;font-size:14px;font-weight:650;line-height:1.2}
+.pbtn small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+.pbtn.sel{border-color:var(--red);background:var(--red-soft)}
+.pbtn .badge{position:absolute;top:-8px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* Anmeldung */
+.search{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff}
+.legends{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.leg{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;text-align:left;font-weight:650;font-size:14px;line-height:1.2}
+.leg small{display:block;font-weight:500;font-size:12px;color:var(--muted);margin-top:2px}
+.leg.taken{background:var(--bg);color:var(--muted)}
+input.f{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:18px;background:#fff;margin-top:6px}
+label.l{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-top:14px}
+.err{color:var(--red);font-size:14px;margin-top:10px;min-height:20px}
+
+/* Navigation */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.tabs .in{display:flex;max-width:640px;width:100%}
+nav.tabs button{flex:1;border:0;background:none;padding:8px 2px 9px;font-size:11px;font-weight:650;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button span{font-size:21px;line-height:1.1;filter:grayscale(1);opacity:.7}
+nav.tabs button.on{color:var(--red)}
+nav.tabs button.on span{filter:none;opacity:1}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:9;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.empty{text-align:center;color:var(--muted);padding:18px 6px;font-size:15px}
+svg text{font-family:inherit}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.opt .bar{height:8px;border-radius:4px;background:var(--bg);position:relative;margin-top:4px}
+.opt .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+ul.rules{padding-left:20px;margin:6px 0}
+ul.rules li{margin:5px 0}
+.adm input{width:56px;border:1.5px solid var(--line);border-radius:10px;padding:8px;font-size:16px;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="ring">
+    <img class="crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/134.png" alt="VfB Stuttgart">
+    <div class="grow"><h1>Pausentee</h1><small id="subtitle">VfB-Tipprunde</small></div>
+    <img class="comp" id="hdrComp" alt="" hidden>
+  </div>
+  <div class="sub"></div>
+</header>
+<main class="wrap" id="main"><div class="empty">Lädt …</div></main>
+<nav class="tabs" id="nav" hidden><div class="in">
+  <button data-v="spiele"><span>⚽</span>Spiele</button>
+  <button data-v="tabelle"><span>🏆</span>Tabelle</button>
+  <button data-v="spieler"><span>⭐</span>Spieler</button>
+  <button data-v="wettbewerb"><span>🏟️</span>Wettbewerb</button>
+  <button data-v="mehr"><span>☕</span>Mehr</button>
+</div></nav>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+/* =========================================================
+   EINSTELLUNGEN
+   ========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyACL_u2I8L2PaHwUtEaA99EZ9iXBZ3Pol4",
+  authDomain: "quiz-de-titte.firebaseapp.com",
+  databaseURL: "https://quiz-de-titte-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "quiz-de-titte"
+};
+const ROOT = 'pausentee';                       // Knoten in der Datenbank
+const START = Date.parse('2026-11-25T12:00:00Z'); // ab hier zählen die Spiele
+const SEASON_START = Date.parse('2026-07-01T00:00:00Z');
+const VFB = '134';                              // ESPN-ID des VfB
+const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer/';
+const API2 = 'https://site.api.espn.com/apis/v2/sports/soccer/';
+const COMPS = {
+  'ger.1':            {n:'Bundesliga',        logo:10,    table:true},
+  'ger.dfb_pokal':    {n:'DFB-Pokal',         logo:2061,  table:false},
+  'uefa.champions':   {n:'Champions League',  logo:2,     table:true},
+  'uefa.europa':      {n:'Europa League',     logo:2310,  table:true},
+  'uefa.europa.conf': {n:'Conference League', logo:20296, table:true},
+  'ger.super_cup':    {n:'Supercup',          logo:null,  table:false}
+};
+const compLogo = s => COMPS[s] && COMPS[s].logo ? `https://a.espncdn.com/i/leaguelogos/soccer/500/${COMPS[s].logo}.png` : '';
+const compName = s => (COMPS[s] && COMPS[s].n) || s;
+
+const LEGENDS = [
+  'Robert Schlienz','Erwin Waldner','Erich Retter','Hermann Ohlicher','Karl-Heinz Förster','Bernd Förster','Hansi Müller',
+  'Dieter Hoeneß','Ottmar Hitzfeld','Helmut Roleder','Karl Allgöwer','Walter Kelsch','Didier Six','Asgeir Sigurvinsson',
+  'Bernd Martin','Günther Schäfer','Jürgen Klinsmann','Guido Buchwald','Fritz Walter','Maurizio Gaudino','Eike Immel',
+  'Matthias Sammer','Andreas Buck','Eyjólfur Sverrisson','Michael Frontzeck','Thomas Berthold','Krassimir Balakov',
+  'Giovane Élber','Fredi Bobic','Thomas Schneider','Zvonimir Soldo','Frank Verlaat','Gerhard Poschner','Franz Wohlfahrt',
+  'Sean Dundee','Ioan Ganea','Horst Heldt','Marcelo Bordon','Silvio Meißner','Timo Hildebrand','Kevin Kurányi',
+  'Philipp Lahm','Andreas Hinkel','Aliaksandr Hleb','Jon Dahl Tomasson','Cacau','Mario Gómez','Sami Khedira',
+  'Thomas Hitzlsperger','Fernando Meira','Pavel Pardo','Ludovic Magnin','Serdar Tasci','Roberto Hilbert','Jens Lehmann',
+  'Christian Gentner','Martin Harnik','Vedad Ibišević','Sven Ulreich','Daniel Didavi','Timo Werner','Benjamin Pavard',
+  'Daniel Ginczek','Christian Träsch','Gonzalo Castro','Nicolás González','Silas Katompa','Saša Kalajdžić','Wataru Endo',
+  'Borna Sosa','Hiroki Ito','Serhou Guirassy','Chris Führich','Deniz Undav','Maximilian Mittelstädt','Angelo Stiller',
+  'Alexander Nübel','Waldemar Anton','Enzo Millot','Atakan Karazor','Jamie Leweling','Ermedin Demirović','Nick Woltemade',
+  'Josha Vagnoman','Pascal Stenzel','Gregor Kobel','Bilal El Khannouss','Jeff Chabot'
+];
+const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const surname = s => { const p = s.split(' '); return p.length > 1 ? p.slice(1).join(' ') : s; };
+
+const TEAM_DE = {
+  'Bayern Munich':'FC Bayern','FC Cologne':'1. FC Köln','Cologne':'Köln','Internazionale':'Inter Mailand','Inter Milan':'Inter Mailand',
+  'Hamburg SV':'Hamburger SV','Mainz':'Mainz 05','Club Brugge':'FC Brügge','Lille':'OSC Lille','AC Milan':'AC Mailand',
+  'Juventus':'Juventus Turin','Sporting CP':'Sporting Lissabon','Benfica':'Benfica Lissabon','Red Star Belgrade':'Roter Stern Belgrad',
+  'Bayer Leverkusen':'Leverkusen','Borussia Mönchengladbach':'Gladbach','Eintracht Frankfurt':'Frankfurt','Borussia Dortmund':'Dortmund'
+};
+const CITY_DE = {Milano:'Mailand',Munich:'München',Cologne:'Köln',Lisbon:'Lissabon',Rome:'Rom',Turin:'Turin',Naples:'Neapel',Prague:'Prag',Brussels:'Brüssel',Bruges:'Brügge',Vienna:'Wien',Warsaw:'Warschau',Copenhagen:'Kopenhagen',Belgrade:'Belgrad',Athens:'Athen',Moscow:'Moskau'};
+const deTeam = n => TEAM_DE[n] || n;
+const ROUND_DE = [
+  [/league phase/i,'Ligaphase'],[/group/i,'Gruppenphase'],[/knockout.*play/i,'Play-offs'],[/play-?off/i,'Play-offs'],
+  [/round of 64/i,'1. Runde'],[/round of 32/i,'2. Runde'],[/round of 16/i,'Achtelfinale'],[/quarter/i,'Viertelfinale'],[/semi/i,'Halbfinale'],
+  [/^final$/i,'Finale'],[/first round/i,'1. Runde'],[/second round/i,'2. Runde'],[/third round/i,'3. Runde'],[/regular season/i,'']
+];
+const deRound = r => { for (const [re,t] of ROUND_DE) if (re.test(r||'')) return t; return r || ''; };
+
+/* =========================================================
+   HELFER
+   ========================================================= */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TZ = 'Europe/Berlin';
+const fD = new Intl.DateTimeFormat('de-DE',{timeZone:TZ, weekday:'short', day:'2-digit', month:'2-digit'});
+const fDL = new Intl.DateTimeFormat('de-DE',{timeZone:TZ, weekday:'long', day:'numeric', month:'long'});
+const fT = new Intl.DateTimeFormat('de-DE',{timeZone:TZ, hour:'2-digit', minute:'2-digit'});
+const dayKey = t => new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(t);
+const fmtDay = t => { const d = dayKey(t), n = Date.now(); if (d === dayKey(n)) return 'Heute'; if (d === dayKey(n + 864e5)) return 'Morgen'; if (d === dayKey(n - 864e5)) return 'Gestern'; return fD.format(t).replace(',', ''); };
+const fmtWhen = m => `${fmtDay(m.t)}${m.timeValid ? ', ' + fT.format(m.t) + ' Uhr' : ', Uhrzeit folgt'}`;
+const num = x => String(x).replace('.', ',');
+const now = () => Date.now();
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2600); }
+async function sha(s){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
+const pinHash = (key, pin) => sha('pausentee|' + key + '|' + pin);
+const stable = o => o && typeof o === 'object' ? '{' + Object.keys(o).sort().map(k => JSON.stringify(k) + ':' + stable(o[k])).join(',') + '}' : JSON.stringify(o);
+async function getJSON(url){ const r = await fetch(url, {cache:'no-store'}); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+function cdText(t){
+  let s = Math.max(0, Math.floor((t - now()) / 1000));
+  const d = Math.floor(s / 86400); s -= d * 86400; const h = Math.floor(s / 3600); s -= h * 3600; const mi = Math.floor(s / 60); s -= mi * 60;
+  if (d >= 2) return `Anpfiff in ${d} Tagen, ${h} Std`;
+  if (d === 1) return `Anpfiff in 1 Tag, ${h} Std`;
+  if (h > 0) return `Anpfiff in ${h} Std ${String(mi).padStart(2,'0')} Min`;
+  return `Anpfiff in ${mi}:${String(s).padStart(2,'0')} Min`;
+}
+
+/* =========================================================
+   ZUSTAND
+   ========================================================= */
+let db = null, D = {}, dataReady = false, dbError = null;
+let me = localStorage.getItem('pausentee-me') || null;
+let view = localStorage.getItem('pausentee-view') || 'spiele';
+let M = {};                 // Spiele von ESPN (id -> Spiel)
+let espnOk = false, espnErr = false;
+const live = {};            // Live-Daten aus dem Summary (id -> Teil-Spiel)
+const players = {};         // Aufstellung je Spiel
+const standings = {};       // Tabellen je Wettbewerb
+let compSel = null;         // gewählter Wettbewerb im Reiter
+let showAllUpcoming = false;
+let voteDraft = {};         // Auswahl Spieler der Saison (mid -> [ids])
+let adminOk = sessionStorage.getItem('pausentee-admin') === '1';
+const openD = new Set(), openU = new Set(), loadingP = new Set(), loadingS = new Set();
+
+/* =========================================================
+   ESPN
+   ========================================================= */
+function normEvent(e){
+  const c = (e.competitions && e.competitions[0]) || {};
+  const cs = c.competitors || [];
+  const H = cs.find(x => x.homeAway === 'home') || cs[0] || {};
+  const A = cs.find(x => x.homeAway === 'away') || cs[1] || {};
+  const team = x => ({
+    id: String((x.team && x.team.id) || x.id || ''),
+    name: deTeam((x.team && (x.team.displayName || x.team.name)) || ''),
+    logo: (x.team && ((x.team.logos && x.team.logos[0] && x.team.logos[0].href) || x.team.logo)) || ''
+  });
+  const sc = x => { const s = x.score; const v = (s && typeof s === 'object') ? (s.displayValue ?? s.value) : s; const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+  const st = (c.status && c.status.type) || {};
+  const h = team(H), a = team(A);
+  return {
+    id: String(e.id), t: Date.parse(e.date), timeValid: e.timeValid !== false && c.timeValid !== false,
+    comp: (e.league && e.league.slug) || '', round: (e.league && e.league.slug) === 'ger.1' ? '' : deRound(e.seasonType && e.seasonType.name),
+    venue: (c.venue && c.venue.fullName) || '', city: (c.venue && c.venue.address && c.venue.address.city) || '',
+    home: h, away: a, vfbHome: h.id === VFB,
+    state: st.state || 'pre', completed: !!st.completed, sname: st.name || '', clock: (c.status && c.status.displayClock) || '',
+    hs: st.state && st.state !== 'pre' ? sc(H) : null, as: st.state && st.state !== 'pre' ? sc(A) : null
+  };
+}
+async function refreshSchedule(){
+  try {
+    const [p, f] = await Promise.all([getJSON(API + 'all/teams/' + VFB + '/schedule'), getJSON(API + 'all/teams/' + VFB + '/schedule?fixture=true')]);
+    const next = {};
+    for (const e of [...(p.events || []), ...(f.events || [])]) {
+      const m = normEvent(e);
+      if (!COMPS[m.comp] || !(m.t >= SEASON_START)) continue;
+      next[m.id] = m;
+    }
+    M = next; espnOk = true; espnErr = false;
+    syncCache();
+  } catch (err) { espnErr = true; console.warn('[Pausentee] Spielplan', err); }
+  render();
+}
+async function pollLive(m){
+  try {
+    const s = await getJSON(API + 'all/summary?event=' + m.id);
+    const c = s.header && s.header.competitions && s.header.competitions[0];
+    if (!c) return;
+    const st = (c.status && c.status.type) || {};
+    const H = (c.competitors || []).find(x => x.homeAway === 'home'), A = (c.competitors || []).find(x => x.homeAway === 'away');
+    const n = x => { const v = parseInt(x && (typeof x.score === 'object' ? x.score.displayValue : x.score), 10); return Number.isFinite(v) ? v : null; };
+    live[m.id] = {state: st.state, completed: !!st.completed, sname: st.name, clock: c.status && c.status.displayClock, hs: st.state !== 'pre' ? n(H) : null, as: st.state !== 'pre' ? n(A) : null, detail: st.shortDetail};
+    if (st.completed) refreshSchedule();
+    syncResults(); render();
+  } catch (err) { console.warn('[Pausentee] Live', err); }
+}
+async function loadPlayers(mid){
+  if (players[mid] && players[mid].length) return players[mid];
+  let list = [];
+  try {
+    const s = await getJSON(API + 'all/summary?event=' + mid);
+    const r = (s.rosters || []).find(x => x.team && String(x.team.id) === VFB);
+    if (r) list = (r.roster || []).filter(p => p.starter || p.subbedIn).map(p => ({id: String(p.athlete.id), n: p.athlete.displayName, j: p.jersey || '', st: !!p.starter}));
+  } catch (err) { console.warn('[Pausentee] Aufstellung', err); }
+  if (!list.length) {
+    try {
+      const r = await getJSON(API + 'ger.1/teams/' + VFB + '/roster');
+      list = (r.athletes || []).map(a => ({id: String(a.id), n: a.displayName, j: a.jersey || '', st: true, squad: true}));
+    } catch (err) { console.warn('[Pausentee] Kader', err); }
+  }
+  players[mid] = list; return list;
+}
+async function loadStandings(slugC){
+  if (loadingS.has(slugC) || (standings[slugC] && now() - standings[slugC].at < 10 * 60e3)) return;
+  loadingS.add(slugC);
+  try {
+    const j = await getJSON(API2 + slugC + '/standings');
+    const groups = (j.children || []).map(ch => ({name: ch.name, entries: ((ch.standings && ch.standings.entries) || []).map(e => {
+      const s = {}; (e.stats || []).forEach(x => s[x.name] = x);
+      return {id: String(e.team.id), name: deTeam(e.team.shortDisplayName || e.team.displayName), logo: e.team.logos && e.team.logos[0] && e.team.logos[0].href,
+        rank: +(s.rank && s.rank.value) || 0, gp: s.gamesPlayed ? s.gamesPlayed.displayValue : '', gd: s.pointDifferential ? s.pointDifferential.displayValue : '', pts: s.points ? s.points.displayValue : '', color: e.note && e.note.color};
+    }).sort((a, b) => a.rank - b.rank)}));
+    standings[slugC] = {at: now(), groups};
+  } catch (err) { standings[slugC] = {at: now(), groups: [], err: true}; }
+  loadingS.delete(slugC);
+  render();
+}
+
+/* =========================================================
+   SPIELE ZUSAMMENFÜHREN (ESPN + Datenbank)
+   ========================================================= */
+function cacheObj(m){ return {t: m.t, tv: m.timeValid ? 1 : 0, c: m.comp, r: m.round || '', v: m.venue || '', ci: m.city || '', h: {id: m.home.id, n: m.home.name, l: m.home.logo || ''}, a: {id: m.away.id, n: m.away.name, l: m.away.logo || ''}}; }
+function fromCache(id, c){ return {id, t: c.t, timeValid: !!c.tv, comp: c.c, round: c.r, venue: c.v, city: c.ci, home: {id: c.h.id, name: c.h.n, logo: c.h.l}, away: {id: c.a.id, name: c.a.n, logo: c.a.l}, vfbHome: c.h.id === VFB, state: c.t < now() ? 'post' : 'pre', completed: false, hs: null, as: null, cached: true}; }
+function syncCache(){
+  if (!db || dbError || !dataReady) return;
+  const upd = {}, cache = D.spiele || {};
+  for (const m of Object.values(M)) {
+    if (m.t < START) continue;
+    const o = cacheObj(m);
+    if (stable(cache[m.id]) !== stable(o)) upd['spiele/' + m.id] = o;
+  }
+  if (Object.keys(upd).length) db.ref(ROOT).update(upd).catch(() => {});
+  syncResults();
+}
+function syncResults(){
+  if (!db || dbError || !dataReady) return;
+  const upd = {};
+  for (const m of matches()) {
+    if (m.t < START || !m.completed || m.hs == null || m.as == null) continue;
+    const r = (D.results || {})[m.id];
+    if (r && r.src === 'manual') continue;
+    if (!r || r.h !== m.hs || r.a !== m.as) upd['results/' + m.id] = {h: m.hs, a: m.as, src: 'auto', at: firebase.database.ServerValue.TIMESTAMP};
+  }
+  if (Object.keys(upd).length) db.ref(ROOT).update(upd).catch(() => {});
+}
+function matches(){
+  const all = {};
+  for (const [id, c] of Object.entries(D.spiele || {})) if (c && c.h && c.a) all[id] = fromCache(id, c);
+  for (const [id, m] of Object.entries(M)) all[id] = {...m};
+  for (const [id, l] of Object.entries(live)) if (all[id]) Object.assign(all[id], Object.fromEntries(Object.entries(l).filter(([k, v]) => v != null)));
+  return Object.values(all).sort((a, b) => a.t - b.t);
+}
+const counted = () => matches().filter(m => m.t >= START && !/POSTPONED|CANCEL/.test(m.sname || ''));
+function result(m){
+  const r = (D.results || {})[m.id];
+  if (r && r.h != null && r.a != null) return {h: +r.h, a: +r.a, src: r.src};
+  if (m.completed && m.hs != null && m.as != null) return {h: m.hs, a: m.as, src: 'espn'};
+  return null;
+}
+const isLive = m => !result(m) && (m.state === 'in' || (now() >= m.t && now() < m.t + 3.5 * 3600e3 && m.state !== 'post' && !/POSTPONED|CANCEL/.test(m.sname || '')));
+const opp = m => m.vfbHome ? m.away : m.home;
+
+/* =========================================================
+   PUNKTE
+   ========================================================= */
+function points(tip, r, m){
+  const td = tip.h - tip.a, rd = r.h - r.a;
+  const ten = Math.sign(td) === Math.sign(rd), diff = td === rd, hg = tip.h === r.h, ag = tip.a === r.a;
+  const vfbG = m.vfbHome ? hg : ag, oppG = m.vfbHome ? ag : hg;
+  return {ten, diff, vfbG, oppG, exact: hg && ag, base: (ten ? 2 : 0) + (diff ? 1 : 0) + (hg ? 1 : 0) + (ag ? 1 : 0)};
+}
+const users = () => Object.entries(D.users || {}).filter(([k, u]) => u && u.name).map(([k, u]) => ({k, ...u}));
+const uName = k => ((D.users || {})[k] || {}).name || '?';
+const tipOf = (mid, k) => ((D.tips || {})[mid] || {})[k] || null;
+function validTip(m, k){
+  const t = tipOf(m.id, k);
+  if (!t || t.h == null || t.a == null) return null;
+  if (t.at && t.at > m.t + 120e3) return null;
+  return t;
+}
+const halfOf = t => { const d = new Date(t); const y = d.getUTCFullYear(), mo = d.getUTCMonth(); return mo >= 6 ? y + '-H' : (y - 1) + '-R'; };
+const halfName = t => halfOf(t).endsWith('H') ? 'Hinrunde' : 'Rückrunde';
+function rankOf(list, tot, ex){
+  const arr = list.map(u => u.k).sort((a, b) => (tot[b] - tot[a]) || (ex[b] - ex[a]) || uName(a).localeCompare(uName(b), 'de'));
+  const rk = {}; arr.forEach((k, i) => { const p = arr[i - 1]; rk[k] = (i > 0 && tot[p] === tot[k] && ex[p] === ex[k]) ? rk[p] : i + 1; });
+  return {order: arr, rk};
+}
+function evaluate(){
+  const us = users(), tot = {}, ex = {}, hist = [];
+  us.forEach(u => { tot[u.k] = 0; ex[u.k] = 0; });
+  for (const m of counted()) {
+    const r = result(m); if (!r) continue;
+    const part = us.filter(u => !u.joinedAt || u.joinedAt <= m.t + 120e3);
+    const per = {};
+    for (const u of part) {
+      const tip = validTip(m, u.k); let p = 0, b = null;
+      if (tip) { b = points(tip, r, m); p = b.base * (tip.j ? 2 : 1); if (b.exact) ex[u.k]++; }
+      tot[u.k] += p; per[u.k] = {p, b, tip};
+    }
+    hist.push({m, r, per, tot: {...tot}, ex: {...ex}, ...rankOf(part, tot, ex)});
+  }
+  const cur = rankOf(us, tot, ex);
+  const last = hist[hist.length - 1], prev = hist[hist.length - 2];
+  const king = [], gurke = [];
+  if (last) {
+    const vals = Object.values(last.per).map(x => x.p);
+    const mx = Math.max(...vals), mn = Math.min(...vals);
+    if (vals.length > 1 && mx !== mn) for (const [k, x] of Object.entries(last.per)) { if (x.p === mx) king.push(k); if (x.p === mn) gurke.push(k); }
+  }
+  const lastRank = cur.order.length ? cur.rk[cur.order[cur.order.length - 1]] : 0;
+  const lantern = (hist.length && cur.order.length > 1 && lastRank > 1) ? cur.order.filter(k => cur.rk[k] === lastRank) : [];
+  const move = {};
+  if (last && prev) for (const k of cur.order) if (prev.rk[k] && last.rk[k]) move[k] = prev.rk[k] - last.rk[k];
+  return {us, tot, ex, hist, cur, last, king, gurke, lantern, move};
+}
+
+/* =========================================================
+   DATENBANK
+   ========================================================= */
+function initDb(){
+  try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); }
+  catch (err) { dbError = 'Firebase startet nicht: ' + err.message; render(); return; }
+  db.ref(ROOT).on('value', snap => {
+    D = snap.val() || {}; dataReady = true; dbError = null;
+    if (me && !(D.users || {})[me]) { me = null; localStorage.removeItem('pausentee-me'); }
+    syncCache(); onData();
+  }, err => { dbError = /permission/i.test(err.message) ? 'rules' : err.message; render(); });
+}
+function onData(){ if (view === 'login' || view === 'admin') { if (view === 'login') renderLegendList(); return; } render(); }
+
+/* =========================================================
+   ANMELDUNG
+   ========================================================= */
+let loginPick = null;
+function renderLogin(){
+  $('#nav').hidden = true;
+  $('#main').innerHTML = `
+    <div class="card">
+      <h2 style="margin-top:4px">Willkommen beim Pausentee</h2>
+      <p style="margin:6px 4px 0">Wähle deine VfB-Legende. Das ist dein Spitzname in der Tipprunde, jede Legende gibt es nur einmal.</p>
+    </div>
+    <div id="loginBox"></div>
+    <input class="search" id="lsearch" placeholder="Legende suchen, z. B. Bobic" autocomplete="off">
+    <div class="legends" id="legends"></div>`;
+  $('#lsearch').addEventListener('input', renderLegendList);
+  renderLegendList(); renderLoginBox();
+}
+function renderLegendList(){
+  const el = $('#legends'); if (!el) return;
+  const q = slug($('#lsearch').value || '');
+  const taken = D.users || {};
+  const list = [...LEGENDS].sort((a, b) => surname(a).localeCompare(surname(b), 'de')).filter(n => !q || slug(n).includes(q));
+  el.innerHTML = list.map(n => {
+    const k = slug(n), t = taken[k];
+    return `<button class="leg ${t ? 'taken' : ''}" data-k="${k}">${esc(n)}<small>${t ? (t.vorname ? esc(t.vorname) + ' · ' : '') + 'vergeben, anmelden' : 'frei'}</small></button>`;
+  }).join('') || '<div class="empty" style="grid-column:1/-1">Keine Legende gefunden</div>';
+  el.querySelectorAll('.leg').forEach(b => b.onclick = () => { loginPick = b.dataset.k; renderLoginBox(); window.scrollTo({top: 0, behavior: 'smooth'}); });
+}
+function renderLoginBox(){
+  const box = $('#loginBox'); if (!box) return;
+  if (!loginPick) { box.innerHTML = ''; return; }
+  const name = LEGENDS.find(n => slug(n) === loginPick) || loginPick;
+  const u = (D.users || {})[loginPick];
+  const isNew = !u, needPin = u && !u.pin;
+  box.innerHTML = `<div class="card hl">
+    <div class="row between"><b style="font-size:20px">${esc(name)}</b><button class="btn sec small" id="lcancel">Andere wählen</button></div>
+    ${isNew ? `<label class="l">Dein Vorname (für die Runde sichtbar, freiwillig)</label><input class="f" id="lvn" maxlength="20" autocomplete="given-name">` : ''}
+    <label class="l">${isNew || needPin ? 'Wähle eine vierstellige PIN' : 'Deine PIN'}</label>
+    <input class="f" id="lpin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off">
+    ${isNew || needPin ? `<label class="l">PIN wiederholen</label><input class="f" id="lpin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off">` : ''}
+    <div class="err" id="lerr"></div>
+    <button class="btn" id="lgo">${isNew ? 'Mitmachen' : 'Anmelden'}</button>
+    ${isNew ? '<p class="small muted" style="margin:10px 2px 0">Mit der PIN meldest du dich auch auf einem anderen Handy an.</p>' : ''}
+  </div>`;
+  $('#lcancel').onclick = () => { loginPick = null; renderLoginBox(); };
+  $('#lgo').onclick = () => doLogin(name, isNew, needPin);
+}
+async function doLogin(name, isNew, needPin){
+  const err = $('#lerr'), pin = ($('#lpin').value || '').trim();
+  if (!/^\d{4}$/.test(pin)) { err.textContent = 'Die PIN hat vier Ziffern.'; return; }
+  if ((isNew || needPin) && pin !== ($('#lpin2').value || '').trim()) { err.textContent = 'Die beiden PINs stimmen nicht überein.'; return; }
+  if (dbError || !db) { err.textContent = 'Keine Verbindung zur Datenbank.'; return; }
+  const k = loginPick, h = await pinHash(k, pin);
+  $('#lgo').disabled = true;
+  try {
+    if (isNew) {
+      const vn = ($('#lvn').value || '').trim().slice(0, 20);
+      const res = await db.ref(ROOT + '/users/' + k).transaction(cur => cur ? undefined : {name, vorname: vn, pin: h, joinedAt: firebase.database.ServerValue.TIMESTAMP});
+      if (!res.committed) { err.textContent = 'Die Legende hat sich gerade jemand anders geschnappt.'; $('#lgo').disabled = false; return; }
+    } else if (needPin) {
+      await db.ref(ROOT + '/users/' + k + '/pin').set(h);
+    } else {
+      const u = (D.users || {})[k];
+      if (!u || u.pin !== h) { err.textContent = 'Falsche PIN.'; $('#lgo').disabled = false; return; }
+    }
+    me = k; localStorage.setItem('pausentee-me', k); loginPick = null;
+    view = 'spiele'; render(); toast(isNew ? 'Willkommen in der Runde!' : 'Angemeldet');
+  } catch (e2) { err.textContent = 'Fehler: ' + e2.message; $('#lgo').disabled = false; }
+}
+
+/* =========================================================
+   TIPPEN
+   ========================================================= */
+const draft = {};
+function myTip(mid){ return draft[mid] || tipOf(mid, me); }
+function stepTip(m, side, d){
+  if (now() >= m.t) { toast('Anpfiff war schon, Tipp gesperrt'); return; }
+  const cur = myTip(m.id) || {};
+  let h = cur.h, a = cur.a;
+  if (h == null || a == null) { h = h ?? 0; a = a ?? 0; }
+  if (side === 'h') h = Math.max(0, Math.min(15, h + d)); else a = Math.max(0, Math.min(15, a + d));
+  draft[m.id] = {h, a, j: !!cur.j};
+  saveTip(m);
+  render();
+}
+function saveTip(m){
+  clearTimeout(saveTip['_' + m.id]);
+  saveTip['_' + m.id] = setTimeout(async () => {
+    const t = draft[m.id]; if (!t) return;
+    if (now() >= m.t) { delete draft[m.id]; toast('Zu spät, Anpfiff war schon'); render(); return; }
+    try { await db.ref(`${ROOT}/tips/${m.id}/${me}`).set({h: t.h, a: t.a, j: !!t.j, at: firebase.database.ServerValue.TIMESTAMP}); delete draft[m.id]; }
+    catch (e) { toast('Tipp nicht gespeichert: ' + e.message); }
+    render();
+  }, 450);
+}
+function jokerElsewhere(m){
+  for (const [mid, by] of Object.entries(D.tips || {})) {
+    if (mid === m.id || !by || !by[me] || !by[me].j) continue;
+    const o = matches().find(x => x.id === mid);
+    if (o && o.t >= START && halfOf(o.t) === halfOf(m.t)) return o;
+  }
+  return null;
+}
+async function toggleJoker(m){
+  if (now() >= m.t) return;
+  const t = myTip(m.id);
+  if (!t || t.h == null) { toast('Erst tippen, dann Joker setzen'); return; }
+  const other = jokerElsewhere(m);
+  if (!t.j && other && other.t <= now()) { toast(`Joker der ${halfName(m.t)} schon gegen ${opp(other).name} eingesetzt`); return; }
+  const upd = {};
+  if (!t.j && other) upd[`tips/${other.id}/${me}/j`] = false;
+  upd[`tips/${m.id}/${me}`] = {h: t.h, a: t.a, j: !t.j, at: firebase.database.ServerValue.TIMESTAMP};
+  delete draft[m.id];
+  try { await db.ref(ROOT).update(upd); toast(!t.j ? (other ? `Joker verschoben, vorher gegen ${opp(other).name}` : 'Joker gesetzt: doppelte Punkte') : 'Joker zurückgenommen'); }
+  catch (e) { toast('Fehler: ' + e.message); }
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function render(){
+  const main = $('#main');
+  if (dbError === 'rules') { $('#nav').hidden = true; main.innerHTML = `<div class="card"><h2 style="margin-top:4px">Fast geschafft</h2><p>Die Datenbank lässt den Pausentee noch nicht rein. In der Firebase-Konsole fehlt bei den Regeln der Eintrag <code>pausentee</code> (siehe <code>database.rules.json</code> im Repository). Danach diese Seite neu laden.</p></div>`; return; }
+  if (dbError) { $('#nav').hidden = true; main.innerHTML = `<div class="card"><p>${esc(dbError)}</p></div>`; return; }
+  if (!dataReady) return;
+  if (!me) { if (view !== 'login') { view = 'login'; renderLogin(); } return; }
+  if (view === 'login') view = 'spiele';
+  if (view === 'admin') return;
+  $('#nav').hidden = false;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+  const ms = matches(), cur = ms.find(isLive) || ms.find(m => m.t > now() && !result(m)) || null;
+  const hc = $('#hdrComp');
+  if (cur && compLogo(cur.comp)) { hc.src = compLogo(cur.comp); hc.alt = compName(cur.comp); hc.hidden = false; } else hc.hidden = true;
+  const u = (D.users || {})[me] || {};
+  $('#subtitle').textContent = `VfB-Tipprunde · ${u.name || ''}`;
+  const y = window.scrollY;
+  const E = evaluate();
+  main.innerHTML = ({spiele: vSpiele, tabelle: vTabelle, spieler: vSpieler, wettbewerb: vWettbewerb, mehr: vMehr}[view] || vSpiele)(ms, cur, E);
+  bind(main, ms, E);
+  window.scrollTo(0, y);
+  tickCountdowns();
+}
+function teamsBlock(m, centerHtml){
+  return `<div class="teams">
+    <div class="team"><img src="${esc(m.home.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span>${esc(m.home.name)}</span></div>
+    ${centerHtml}
+    <div class="team"><img src="${esc(m.away.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span>${esc(m.away.name)}</span></div>
+  </div>`;
+}
+function metaLine(m){
+  const cl = compLogo(m.comp);
+  const city = CITY_DE[m.city] || m.city;
+  return `<div class="meta">${cl ? `<img src="${cl}" alt="">` : ''}<span class="grow ell">${esc(compName(m.comp))}${m.round ? ' · ' + esc(m.round) : ''}</span></div>
+    <div class="meta" style="margin-top:4px"><span>📅 ${esc(fmtWhen(m))}</span></div>
+    ${m.venue ? `<div class="meta" style="margin-top:2px"><span class="ell">📍 ${esc(m.venue)}${city ? ', ' + esc(city) : ''}</span></div>` : ''}`;
+}
+function tipStepper(m){
+  const t = myTip(m.id) || {};
+  const saved = tipOf(m.id, me), pending = !!draft[m.id];
+  const jo = jokerElsewhere(m), jokerUsed = !t.j && jo && jo.t <= now();
+  return `<div class="tip">
+      <div class="step"><button data-s="${m.id}|h|-1" aria-label="weniger">−</button><b>${t.h ?? '–'}</b><button data-s="${m.id}|h|1" aria-label="mehr">+</button></div>
+      <div class="colon">:</div>
+      <div class="step"><button data-s="${m.id}|a|-1" aria-label="weniger">−</button><b>${t.a ?? '–'}</b><button data-s="${m.id}|a|1" aria-label="mehr">+</button></div>
+    </div>
+    <div class="tipstate ${saved && !pending ? 'ok' : ''}">${pending ? 'Speichert …' : saved ? `✓ Dein Tipp ${saved.h}:${saved.a} ist gespeichert` : 'Noch nicht getippt'}</div>
+    <button class="joker ${t.j ? 'on' : ''}" data-j="${m.id}" ${jokerUsed ? 'disabled' : ''}>🃏 ${t.j ? 'Joker aktiv: doppelte Punkte' : jokerUsed ? `Joker der ${halfName(m.t)} verbraucht` : jo ? `Joker hierher holen (liegt bei ${esc(opp(jo).name)})` : `Joker setzen (1× pro ${halfName(m.t)})`}</button>`;
+}
+function whoTipped(m){
+  const us = users(), done = us.filter(u => tipOf(m.id, u.k)), open = us.filter(u => !tipOf(m.id, u.k));
+  return `<div class="who"><div class="row between"><span><b>${done.length} von ${us.length}</b> haben getippt</span></div>
+    ${open.length ? `<div class="muted" style="margin-top:4px">Noch offen: ${open.map(u => esc(u.name)).join(', ')}</div>
+    <button class="btn wa small" style="margin-top:10px" data-wa="${m.id}">💬 Erinnerung per WhatsApp</button>` : '<div class="muted" style="margin-top:4px">Alle sind dabei 👍</div>'}</div>`;
+}
+function chipsFor(x, m){
+  if (!x || !x.b) return `<div class="chips"><span class="chip">kein Tipp</span><span class="chip sum">0 Punkte</span></div>`;
+  const b = x.b;
+  return `<div class="chips">
+    <span class="chip ${b.ten ? 'ok' : ''}">Tendenz ${b.ten ? '+2' : '0'}</span>
+    <span class="chip ${b.diff ? 'ok' : ''}">Tordifferenz ${b.diff ? '+1' : '0'}</span>
+    <span class="chip ${b.vfbG ? 'ok' : ''}">VfB-Tore ${b.vfbG ? '+1' : '0'}</span>
+    <span class="chip ${b.oppG ? 'ok' : ''}">Gegentore ${b.oppG ? '+1' : '0'}</span>
+    ${x.tip && x.tip.j ? '<span class="chip j">🃏 Joker ×2</span>' : ''}
+    <span class="chip sum">${x.p} ${x.p === 1 ? 'Punkt' : 'Punkte'}</span></div>`;
+}
+function allTipsList(m, r, provisional){
+  const us = users().filter(u => !u.joinedAt || u.joinedAt <= m.t + 120e3);
+  const rows = us.map(u => {
+    const tip = validTip(m, u.k); let p = null, b = null;
+    if (tip && r) { b = points(tip, r, m); p = b.base * (tip.j ? 2 : 1); }
+    return {u, tip, p, b};
+  }).sort((a, b) => ((b.p ?? -1) - (a.p ?? -1)) || a.u.name.localeCompare(b.u.name, 'de'));
+  return `<div class="tips">${rows.map(x => `<div class="t ${x.u.k === me ? 'me' : ''}">
+      <span class="grow ell"><b>${esc(x.u.name)}</b>${x.u.vorname ? ` <span class="vn">${esc(x.u.vorname)}</span>` : ''}</span>
+      <span class="pill">${x.tip ? x.tip.h + ':' + x.tip.a : '–'}</span>${x.tip && x.tip.j ? '<span title="Joker">🃏</span>' : ''}
+      ${r ? `<span class="pill ${x.p > 0 ? (provisional ? 'red' : 'ok') : ''}" style="min-width:52px;text-align:center">${x.p ?? 0} P</span>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+/* ---------- Reiter Spiele ---------- */
+function vSpiele(ms, cur, E){
+  const c = counted();
+  const lv = c.filter(isLive);
+  const up = c.filter(m => m.t > now() && !result(m));
+  const done = c.filter(m => result(m)).reverse();
+  let h = '';
+  if (espnErr && !espnOk) h += `<div class="card small muted">Spielplan gerade nicht erreichbar, es werden die gespeicherten Spiele gezeigt.</div>`;
+  for (const m of lv) {
+    const rProv = (m.hs != null && m.as != null) ? {h: m.hs, a: m.as} : null;
+    h += `<h2>Läuft gerade</h2><div class="card hl">${metaLine(m)}
+      ${teamsBlock(m, `<div><div class="score">${rProv ? rProv.h + ':' + rProv.a : '–:–'}</div><div class="center"><span class="live">${esc(m.clock && m.clock !== "0'" ? m.clock : 'LIVE')}</span></div></div>`)}
+      <div class="small muted center">Wenn es so bleibt:</div>
+      ${allTipsList(m, rProv, true)}</div>`;
+  }
+  const next = up[0];
+  if (next) {
+    h += `<h2>${lv.length ? 'Danach' : 'Nächstes Spiel'}</h2><div class="card ${lv.length ? '' : 'hl'}">${metaLine(next)}
+      ${teamsBlock(next, `<div class="vs">${next.timeValid ? fT.format(next.t) : 'vs.'}</div>`)}
+      <div class="cd" data-cd="${next.t}">${cdText(next.t)}</div>
+      ${tipStepper(next)}${whoTipped(next)}</div>`;
+  } else if (!lv.length) h += `<div class="card empty">Gerade steht kein Spiel an.</div>`;
+  const rest = up.slice(1), shown = showAllUpcoming ? rest : rest.slice(0, 5);
+  if (rest.length) {
+    h += `<h2>Weitere Spiele</h2><div class="card" style="padding-top:4px;padding-bottom:4px">${shown.map(m => upcomingRow(m)).join('')}</div>`;
+    if (rest.length > 5) h += `<button class="btn sec" id="moreUp">${showAllUpcoming ? 'Weniger anzeigen' : `Alle ${rest.length} Spiele anzeigen`}</button>`;
+  }
+  if (done.length) {
+    h += `<h2>Gespielt</h2><div class="card" style="padding-top:4px;padding-bottom:4px">${done.map(m => doneRow(m, E)).join('')}</div>`;
+  }
+  return h;
+}
+function upcomingRow(m){
+  const t = myTip(m.id) || {}, o = opp(m);
+  return `<div class="mrow" style="flex-wrap:wrap">
+    <img class="cl" src="${compLogo(m.comp)}" alt="">
+    <div class="grow"><div class="small muted ell">${esc(fmtWhen(m))} · ${m.vfbHome ? 'Heim' : 'Auswärts'}</div>
+      <div class="row" style="gap:8px;margin-top:2px"><img class="lg" src="${esc(o.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b class="ell">${m.vfbHome ? 'gegen' : 'bei'} ${esc(o.name)}</b>${t.j ? ' 🃏' : ''}</div></div>
+    <div class="mini">
+      <button data-s="${m.id}|h|-1">−</button><b>${t.h ?? '–'}</b><button data-s="${m.id}|h|1">+</button>
+      <span class="colon" style="font-size:18px">:</span>
+      <button data-s="${m.id}|a|-1">−</button><b>${t.a ?? '–'}</b><button data-s="${m.id}|a|1">+</button>
+    </div></div>`;
+}
+function doneRow(m, E){
+  const r = result(m), h = E.hist.find(x => x.m.id === m.id), mine = h && h.per[me];
+  const o = opp(m);
+  return `<details class="m mrow" style="display:block" data-d="${m.id}" ${openD.has(m.id) ? 'open' : ''}><summary class="row">
+      <img class="cl" src="${compLogo(m.comp)}" alt="">
+      <img class="lg" src="${esc(o.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="grow"><div class="ell"><b>${m.vfbHome ? 'gegen' : 'bei'} ${esc(o.name)}</b></div><div class="small muted">${esc(fmtDay(m.t))}${r.src === 'manual' ? ' · von Hand' : ''}</div></div>
+      <span class="res">${r.h}:${r.a}</span>
+      <span class="pill ${mine && mine.p > 0 ? 'ok' : ''}" style="min-width:48px;text-align:center">${mine ? mine.p : 0} P</span>
+    </summary>
+    ${mine ? `<div class="small" style="margin-top:8px">Dein Tipp: <b>${mine.tip ? mine.tip.h + ':' + mine.tip.a : 'keiner'}</b></div>${chipsFor(mine, m)}` : ''}
+    ${allTipsList(m, r, false)}
+  </details>`;
+}
+
+/* ---------- Reiter Tabelle ---------- */
+function vTabelle(ms, cur, E){
+  if (!E.us.length) return '<div class="card empty">Noch niemand dabei.</div>';
+  let h = '';
+  const L = E.last;
+  if (L) {
+    const mine = L.per[me];
+    const kingHtml = E.king.length ? `<div class="row" style="margin-top:12px"><span style="font-size:26px">👑</span><div><div class="small muted">König des Spieltags</div><b>${E.king.map(uName).map(esc).join(', ')}</b> <span class="muted small">${L.per[E.king[0]].p} P</span></div></div>` : '';
+    const gurkeHtml = E.gurke.length ? `<div class="row" style="margin-top:8px"><span style="font-size:26px">🥒</span><div><div class="small muted">Gurke des Spieltags</div><b>${E.gurke.map(uName).map(esc).join(', ')}</b> <span class="muted small">${L.per[E.gurke[0]].p} P</span></div></div>` : '';
+    h += `<h2>Dein letztes Spiel</h2><div class="card">
+      <div class="row"><img class="lg" style="width:34px;height:34px;object-fit:contain" src="${esc(opp(L.m).logo)}" alt=""><div class="grow"><b>${esc(L.m.home.name)} ${L.r.h}:${L.r.a} ${esc(L.m.away.name)}</b><div class="small muted">${esc(compName(L.m.comp))} · ${esc(fmtDay(L.m.t))}</div></div></div>
+      ${mine ? `<div style="margin-top:10px">Dein Tipp: <b>${mine.tip ? mine.tip.h + ':' + mine.tip.a : 'keiner'}</b>${E.king.includes(me) ? ' 👑' : ''}${E.gurke.includes(me) ? ' 🥒' : ''}</div>${chipsFor(mine, L.m)}` : '<div class="small muted" style="margin-top:8px">Bei diesem Spiel warst du noch nicht dabei.</div>'}
+      ${kingHtml}${gurkeHtml}</div>`;
+  }
+  h += `<h2>Rangliste</h2><div class="card" style="padding:8px 10px"><table class="rank">
+    <tr><td></td><td></td><td class="small muted">${E.hist.length} ${E.hist.length === 1 ? 'Spiel' : 'Spiele'} gewertet</td><td class="ex small">exakt</td><td class="pts small muted" style="font-size:12px">Pkt</td></tr>
+    ${E.cur.order.map(k => {
+      const u = D.users[k], rk = E.cur.rk[k], mv = E.move[k];
+      const ar = mv == null ? '<span class="ar eq">·</span>' : mv > 0 ? `<span class="ar up">▲${mv}</span>` : mv < 0 ? `<span class="ar down">▼${-mv}</span>` : '<span class="ar eq">●</span>';
+      const x = L && L.per[k];
+      const badges = (rk === 1 && E.hist.length ? '🏆' : '') + (E.king.includes(k) ? '👑' : '') + (E.gurke.includes(k) ? '🥒' : '') + (E.lantern.includes(k) ? '🏮' : '');
+      return `<tr class="${k === me ? 'me' : ''}" data-u="${k}"><td class="pl">${rk}</td><td class="ar">${ar}</td>
+        <td><span class="nm">${esc(u.name)}</span><span class="badges">${badges}</span>${u.vorname ? `<div class="vn">${esc(u.vorname)}</div>` : ''}
+          ${x ? `<div class="last">Zuletzt: ${x.tip ? x.tip.h + ':' + x.tip.a + (x.tip.j ? ' 🃏' : '') : 'kein Tipp'} · ${x.p} P</div>` : ''}
+          <div class="ubd" ${openU.has(k) ? '' : 'hidden'}>${x ? chipsFor(x, L.m) : ''}</div></td>
+        <td class="ex">${E.ex[k]}</td><td class="pts">${E.tot[k]}</td></tr>`;
+    }).join('')}</table>
+    <div class="small muted" style="margin:8px 4px 2px">Tippe auf einen Namen für die Punkte im letzten Spiel. 🏆 Spitze · 👑 König · 🥒 Gurke des Spieltags · 🏮 Rote Laterne</div></div>`;
+  if (E.hist.length >= 1) h += `<h2>Tippverlauf</h2><div class="card">${chart(E)}</div>`;
+  h += optimists(E);
+  return h;
+}
+function chart(E){
+  const W = 340, H = 190, pl = 30, pr = 12, pt = 10, pb = 24;
+  const n = E.hist.length, maxP = Math.max(5, ...E.us.map(u => E.tot[u.k]));
+  const x = i => pl + (n <= 1 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / maxP);
+  const leader = E.cur.order[0];
+  const line = (k, col, w) => {
+    const pts = E.hist.map((hh, i) => hh.tot[k] != null && hh.per[k] ? [x(i), y(hh.tot[k])] : null).filter(Boolean);
+    if (!pts.length) return '';
+    return pts.length === 1 ? `<circle cx="${pts[0][0]}" cy="${pts[0][1]}" r="${w + 1}" fill="${col}"/>` : `<polyline fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p => p.join(',')).join(' ')}"/>`;
+  };
+  const ticks = [0, Math.round(maxP / 2), maxP];
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Punkteverlauf">`;
+  ticks.forEach(v => s += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eee"/><text x="${pl - 6}" y="${y(v) + 4}" font-size="10" text-anchor="end" fill="#8e8e93">${v}</text>`);
+  E.hist.forEach((hh, i) => { if (n <= 8 || i % Math.ceil(n / 8) === 0 || i === n - 1) s += `<text x="${x(i)}" y="${H - 6}" font-size="10" text-anchor="middle" fill="#8e8e93">${i + 1}</text>`; });
+  E.us.filter(u => u.k !== me && u.k !== leader).forEach(u => s += line(u.k, '#d1d1d6', 1.5));
+  if (leader !== me) s += line(leader, '#1c1c1e', 2.5);
+  s += line(me, '#e2001a', 3);
+  s += '</svg>';
+  return s + `<div class="legend"><span><i style="background:#e2001a"></i>Du</span>${leader !== me ? `<span><i style="background:#1c1c1e"></i>${esc(uName(leader))} (Spitze)</span>` : ''}<span><i style="background:#d1d1d6"></i>alle anderen</span><span>x-Achse: Spiele</span></div>`;
+}
+function optimists(E){
+  const rows = [];
+  for (const u of E.us) {
+    let sum = 0, n = 0;
+    for (const hh of E.hist) { const x = hh.per[u.k]; if (!x || !x.tip) continue; const m = hh.m; const tv = m.vfbHome ? x.tip.h - x.tip.a : x.tip.a - x.tip.h; const rv = m.vfbHome ? hh.r.h - hh.r.a : hh.r.a - hh.r.h; sum += tv - rv; n++; }
+    if (n) rows.push({u, v: sum / n, n});
+  }
+  if (!rows.length) return '';
+  rows.sort((a, b) => b.v - a.v);
+  const mx = Math.max(1, ...rows.map(r => Math.abs(r.v)));
+  return `<h2>Optimisten und Schwarzseher</h2><div class="card opt">
+    <div class="small muted" style="margin-bottom:6px">Wie viele Tore pro Spiel tippt jemand den VfB zu gut (+) oder zu schlecht (−) im Vergleich zum Ergebnis?</div>
+    ${rows.map((r, i) => {
+      const w = Math.abs(r.v) / mx * 50, left = r.v >= 0 ? 50 : 50 - w;
+      const tag = i === 0 && r.v > 0.25 ? ' 🌹' : (i === rows.length - 1 && r.v < -0.25 ? ' 🌧️' : '');
+      return `<div style="margin:10px 0"><div class="row between"><span class="ell"><b>${esc(r.u.name)}</b>${tag}</span><span class="small" style="font-variant-numeric:tabular-nums">${r.v > 0 ? '+' : ''}${num(r.v.toFixed(1))}</span></div>
+        <div class="bar"><i style="left:50%;width:1px;background:#c7c7cc"></i><i style="left:${left}%;width:${Math.max(1, w)}%;background:${r.v >= 0 ? 'var(--red)' : '#5b6b7a'}"></i></div></div>`;
+    }).join('')}
+    <div class="small muted">🌹 Rosarote VfB-Brille · 🌧️ Ewiger Schwarzseher</div></div>`;
+}
+
+/* ---------- Reiter Spieler der Saison ---------- */
+function voteMatch(){
+  const c = counted();
+  for (let i = c.length - 1; i >= 0; i--) {
+    const m = c[i]; if (!result(m)) continue;
+    const nx = c.find(x => x.t > m.t);
+    const end = nx ? nx.t : m.t + 7 * 864e5;
+    return {m, open: now() < end, end};
+  }
+  return null;
+}
+function vSpieler(ms, cur, E){
+  let h = '';
+  const vm = voteMatch();
+  if (vm) {
+    const m = vm.m, r = result(m), votes = (D.votes || {})[m.id] || {}, mine = votes[me];
+    h += `<h2>Top 3 des Spiels</h2><div class="card ${vm.open && !mine ? 'hl' : ''}">
+      <div class="row"><img style="width:34px;height:34px;object-fit:contain" src="${esc(opp(m).logo)}" alt=""><div class="grow"><b>${esc(m.home.name)} ${r.h}:${r.a} ${esc(m.away.name)}</b><div class="small muted">${esc(compName(m.comp))} · ${esc(fmtDay(m.t))}</div></div></div>`;
+    if (mine || !vm.open) {
+      h += voteResults(m, votes, mine);
+      if (vm.open) h += `<div class="small muted" style="margin-top:8px">Wahl offen bis ${esc(fmtDay(vm.end))}, ${fT.format(vm.end)} Uhr. Du kannst deine Wahl ändern.</div><button class="btn sec small" style="margin-top:8px" id="revote">Wahl ändern</button>`;
+    } else {
+      const pl = players[m.id];
+      const sel = voteDraft[m.id] || [];
+      if (!pl) { h += `<div class="empty">Aufstellung lädt …</div>`; if (!loadingP.has(m.id)) { loadingP.add(m.id); loadPlayers(m.id).finally(() => { loadingP.delete(m.id); render(); }); } }
+      else if (!pl.length) h += `<div class="empty">Keine Spielerliste verfügbar.</div>`;
+      else {
+        h += `<div class="small muted" style="margin-top:10px">Wähle deine drei Besten: zuerst Platz 1 (3 Punkte), dann Platz 2 (2), dann Platz 3 (1). Die Wahl der anderen siehst du nach deiner Abgabe.</div>
+          ${pl[0] && pl[0].squad ? '<div class="small muted" style="margin-top:4px">Aufstellung noch nicht da, deshalb der ganze Kader.</div>' : ''}
+          <div class="plist">${pl.map(p => { const i = sel.indexOf(p.id); return `<button class="pbtn ${i >= 0 ? 'sel' : ''}" data-p="${m.id}|${p.id}">${i >= 0 ? `<span class="badge">${i + 1}</span>` : ''}${esc(p.n)}<small>${p.j ? '#' + esc(p.j) : ''}${p.st ? '' : ' · eingewechselt'}</small></button>`; }).join('')}</div>
+          <button class="btn" style="margin-top:12px" id="voteGo" data-m="${m.id}" ${sel.length === 3 ? '' : 'disabled'}>${sel.length === 3 ? 'Abgeben' : `Noch ${3 - sel.length} wählen`}</button>
+          <div class="small muted center" style="margin-top:8px">Offen bis ${esc(fmtDay(vm.end))}, ${fT.format(vm.end)} Uhr</div>`;
+      }
+    }
+    h += `</div>`;
+  } else h += `<div class="card empty">Nach dem ersten gewerteten Spiel wählt ihr hier die Top 3 des Spiels.</div>`;
+  // Saisonwertung
+  const agg = {};
+  for (const m of counted()) {
+    const vs = (D.votes || {})[m.id]; if (!vs) continue;
+    for (const v of Object.values(vs)) (v.p || []).forEach((p, i) => { if (!p) return; const a = agg[p.id] || (agg[p.id] = {n: p.n, pts: 0, first: 0, votes: 0}); a.pts += 3 - i; a.votes++; if (i === 0) a.first++; a.n = p.n; });
+  }
+  const list = Object.values(agg).sort((a, b) => b.pts - a.pts || b.first - a.first || a.n.localeCompare(b.n, 'de'));
+  h += `<h2>Spieler der Saison</h2><div class="card" style="padding:8px 12px">${list.length ? `<table class="rank">${list.map((p, i) => `<tr><td class="pl">${i === 0 ? '⭐' : i + 1}</td><td><span class="nm">${esc(p.n)}</span><div class="vn">${p.first}× Platz 1 · ${p.votes} Stimmen</div></td><td class="pts">${p.pts}</td></tr>`).join('')}</table>` : '<div class="empty">Noch keine Stimmen.</div>'}</div>`;
+  return h;
+}
+function voteResults(m, votes, mine){
+  const agg = {};
+  Object.entries(votes).forEach(([k, v]) => (v.p || []).forEach((p, i) => { if (!p) return; const a = agg[p.id] || (agg[p.id] = {n: p.n, pts: 0, by: []}); a.pts += 3 - i; a.by.push(uName(k) + ' (' + (i + 1) + ')'); }));
+  const list = Object.values(agg).sort((a, b) => b.pts - a.pts);
+  return `${mine ? `<div class="small" style="margin-top:10px">Deine Wahl: ${mine.p.map((p, i) => `<b>${i + 1}. ${esc(p.n)}</b>`).join(' · ')}</div>` : ''}
+    <div class="small muted" style="margin-top:10px">${Object.keys(votes).length} ${Object.keys(votes).length === 1 ? 'Stimme' : 'Stimmen'} abgegeben</div>
+    <table class="rank" style="margin-top:4px">${list.map((p, i) => `<tr><td class="pl">${i + 1}</td><td><span class="nm">${esc(p.n)}</span><div class="vn">${esc(p.by.join(', '))}</div></td><td class="pts">${p.pts}</td></tr>`).join('')}</table>`;
+}
+
+/* ---------- Reiter Wettbewerb ---------- */
+function vWettbewerb(ms, cur, E){
+  const comps = [...new Set(ms.filter(m => m.t >= SEASON_START).map(m => m.comp))].filter(c => COMPS[c]);
+  if (!compSel || !comps.includes(compSel)) compSel = (cur && cur.comp) || comps[0] || 'ger.1';
+  let h = `<div class="chipsel" style="margin-top:14px">${comps.map(c => `<button class="${c === compSel ? 'on' : ''}" data-c="${c}">${compLogo(c) ? `<img src="${compLogo(c)}" alt="">` : ''}${esc(compName(c))}</button>`).join('')}</div>`;
+  const cm = ms.filter(m => m.comp === compSel);
+  const nextC = cm.find(m => m.t > now() && !result(m));
+  h += `<div class="card"><div class="row">${compLogo(compSel) ? `<img src="${compLogo(compSel)}" style="width:48px;height:48px;object-fit:contain" alt="">` : ''}<div class="grow"><b style="font-size:18px">${esc(compName(compSel))}</b>
+    <div class="small muted">${nextC ? `Nächstes Spiel: ${nextC.round ? esc(nextC.round) + ', ' : ''}${nextC.vfbHome ? 'gegen' : 'bei'} ${esc(opp(nextC).name)}, ${esc(fmtWhen(nextC))}` : 'Aktuell kein Spiel angesetzt'}</div></div></div></div>`;
+  if (COMPS[compSel].table) {
+    const st = standings[compSel];
+    loadStandings(compSel);
+    if (!st) h += `<div class="card empty">Tabelle lädt …</div>`;
+    else if (!st.groups.length) h += `<div class="card empty">Tabelle gerade nicht verfügbar.</div>`;
+    else for (const g of st.groups) {
+      h += `<h2>${esc(g.name.replace(/^\d{4}-\d{2}\s*/, '').replace('League Phase', 'Ligaphase').replace('German Bundesliga', 'Tabelle'))}</h2><div class="card" style="padding:10px 8px"><table class="league">
+        <tr><th></th><th>Verein</th><th>Sp</th><th>TD</th><th>Pkt</th></tr>
+        ${g.entries.map(e => `<tr class="${e.id === VFB ? 'vfb' : ''}"><td class="p" style="border-left-color:${e.color || 'transparent'}">${e.rank}</td>
+          <td><div class="row" style="gap:8px"><img src="${esc(e.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span class="ell">${esc(e.name)}</span></div></td>
+          <td class="n">${esc(e.gp)}</td><td class="n">${esc(e.gd)}</td><td class="n"><b>${esc(e.pts)}</b></td></tr>`).join('')}
+      </table></div>`;
+    }
+  }
+  const played = cm.filter(m => result(m) || (m.completed && m.hs != null)).reverse();
+  if (played.length) h += `<h2>VfB in diesem Wettbewerb</h2><div class="card" style="padding-top:4px;padding-bottom:4px">${played.map(m => { const r = result(m) || {h: m.hs, a: m.as}; return `<div class="mrow"><img class="lg" src="${esc(opp(m).logo)}" alt="" loading="lazy"><div class="grow"><b class="ell">${m.vfbHome ? 'gegen' : 'bei'} ${esc(opp(m).name)}</b><div class="small muted">${m.round ? esc(m.round) + ' · ' : ''}${esc(fmtDay(m.t))}</div></div><span class="res">${r.h}:${r.a}</span></div>`; }).join('')}</div>`;
+  return h;
+}
+
+/* ---------- Reiter Mehr ---------- */
+function vMehr(){
+  const u = D.users[me] || {};
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  return `<h2>Du</h2><div class="card"><div class="row between"><div><b style="font-size:18px">${esc(u.name)}</b>${u.vorname ? `<div class="muted small">${esc(u.vorname)}</div>` : ''}</div><button class="btn sec small" id="logout">Abmelden</button></div></div>
+  <h2>Regeln</h2><div class="card"><ul class="rules">
+    <li>Jeder tippt das Ergebnis, zum Beispiel 2:1. Getippt wird bis zum Anpfiff, danach ist gesperrt.</li>
+    <li><b>Punkte:</b> Tendenz 2, Tordifferenz 1, VfB-Tore 1, Gegentore 1. Das exakte Ergebnis bringt damit 5 Punkte.</li>
+    <li><b>Joker:</b> Einmal pro Hinrunde (bis Dezember) und einmal pro Rückrunde (ab Januar) zählt ein Spiel doppelt. Bis zum Anpfiff lässt er sich verschieben.</li>
+    <li>Die Tipps der anderen siehst du erst ab Anpfiff.</li>
+    <li>Es zählt der Endstand nach Verlängerung, ein Elfmeterschießen zählt nicht.</li>
+    <li>Bei Punktgleichheit liegt vorne, wer öfter exakt getippt hat.</li>
+    <li>👑 König und 🥒 Gurke des Spieltags: die meisten und die wenigsten Punkte im letzten Spiel. 🏮 Rote Laterne: Letzter der Gesamtwertung.</li>
+    <li>Wer später einsteigt, startet bei 0.</li>
+    <li><b>Spieler der Saison:</b> Nach Abpfiff wählt jeder bis zum nächsten Anpfiff seine Top 3 des Spiels (3, 2 und 1 Punkt).</li>
+    <li>Bundesliga, DFB-Pokal und Europapokal zählen, Testspiele nicht.</li>
+  </ul></div>
+  <h2>Als App aufs Handy</h2><div class="card small">${ios ? 'In Safari unten auf <b>Teilen</b> tippen, dann <b>Zum Home-Bildschirm</b>.' : 'Im Browser-Menü (drei Punkte) <b>App installieren</b> oder <b>Zum Startbildschirm hinzufügen</b> wählen.'} Dann startet der Pausentee wie eine App.</div>
+  <h2>Link für neue Mitspieler</h2><div class="card"><div class="small muted ell">${esc(location.origin + location.pathname)}</div>
+    <button class="btn wa small" style="margin-top:10px" id="invite">💬 Per WhatsApp einladen</button></div>
+  <div class="center" style="margin-top:26px"><button class="btn sec small" id="toAdmin">Admin</button></div>
+  <div class="center small muted" style="margin-top:12px">Daten: ESPN · Wappen und Logos gehören den Vereinen und Verbänden</div>`;
+}
+
+/* =========================================================
+   EREIGNISSE
+   ========================================================= */
+function bind(main, ms, E){
+  main.querySelectorAll('[data-s]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); const [id, side, d] = b.dataset.s.split('|'); const m = ms.find(x => x.id === id); if (m) stepTip(m, side, +d); });
+  main.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { const m = ms.find(x => x.id === b.dataset.j); if (m) toggleJoker(m); });
+  main.querySelectorAll('[data-wa]').forEach(b => b.onclick = () => {
+    const m = ms.find(x => x.id === b.dataset.wa); if (!m) return;
+    const open = users().filter(u => !tipOf(m.id, u.k)).map(u => u.name);
+    const txt = `☕ Pausentee: ${m.home.name} gegen ${m.away.name}, ${fmtWhen(m)}.\nNoch nicht getippt: ${open.join(', ')}.\nJetzt tippen: ${location.origin + location.pathname}`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  });
+  const mu = $('#moreUp', main); if (mu) mu.onclick = () => { showAllUpcoming = !showAllUpcoming; render(); };
+  main.querySelectorAll('tr[data-u]').forEach(tr => tr.onclick = () => { const d = tr.querySelector('.ubd'); if (d && d.innerHTML.trim()) { d.hidden = !d.hidden; d.hidden ? openU.delete(tr.dataset.u) : openU.add(tr.dataset.u); } });
+  main.querySelectorAll('details[data-d]').forEach(d => d.ontoggle = () => d.open ? openD.add(d.dataset.d) : openD.delete(d.dataset.d));
+  main.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { compSel = b.dataset.c; render(); });
+  main.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    const [mid, pid] = b.dataset.p.split('|'); const sel = voteDraft[mid] || (voteDraft[mid] = []);
+    const i = sel.indexOf(pid); if (i >= 0) sel.splice(i, 1); else if (sel.length < 3) sel.push(pid); else toast('Drei sind gewählt. Tippe einen an, um ihn abzuwählen.');
+    render();
+  });
+  const vg = $('#voteGo', main); if (vg) vg.onclick = async () => {
+    const mid = vg.dataset.m, pl = players[mid] || [], sel = voteDraft[mid] || [];
+    if (sel.length !== 3) return;
+    const p = sel.map(id => { const x = pl.find(q => q.id === id); return {id, n: x ? x.n : id}; });
+    try { await db.ref(`${ROOT}/votes/${mid}/${me}`).set({p, at: firebase.database.ServerValue.TIMESTAMP}); delete voteDraft[mid]; toast('Abgegeben'); } catch (e) { toast('Fehler: ' + e.message); }
+  };
+  const rv = $('#revote', main); if (rv) rv.onclick = async () => { const vm = voteMatch(); if (!vm) return; const mine = ((D.votes || {})[vm.m.id] || {})[me]; voteDraft[vm.m.id] = mine ? mine.p.map(p => p.id) : []; await db.ref(`${ROOT}/votes/${vm.m.id}/${me}`).remove(); };
+  const lo = $('#logout', main); if (lo) lo.onclick = () => { me = null; localStorage.removeItem('pausentee-me'); view = 'login'; renderLogin(); };
+  const inv = $('#invite', main); if (inv) inv.onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(`☕ Tippt mit beim Pausentee, unserer VfB-Tipprunde! Such dir deine VfB-Legende aus: ${location.origin + location.pathname}`), '_blank');
+  const ta = $('#toAdmin', main); if (ta) ta.onclick = () => { view = 'admin'; renderAdmin(); };
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { view = b.dataset.v; localStorage.setItem('pausentee-view', view); window.scrollTo(0, 0); render(); });
+function tickCountdowns(){ document.querySelectorAll('[data-cd]').forEach(el => { const t = +el.dataset.cd; el.textContent = t > now() ? cdText(t) : 'Angepfiffen, Tipps gesperrt'; }); }
+
+/* =========================================================
+   ADMIN (Notfall-Knopf)
+   ========================================================= */
+async function renderAdmin(){
+  $('#nav').hidden = false;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.remove('on'));
+  const main = $('#main');
+  const cfg = D.config || {};
+  if (!adminOk) {
+    main.innerHTML = `<h2>Admin</h2><div class="card">
+      <p class="small muted" style="margin-top:0">${cfg.admin ? 'Admin-Code eingeben.' : 'Noch kein Admin-Code festgelegt. Wer ihn jetzt festlegt, ist Admin.'}</p>
+      <input class="f" id="acode" type="password" inputmode="numeric" autocomplete="off" placeholder="Code">
+      <div class="err" id="aerr"></div><button class="btn" id="ago">${cfg.admin ? 'Öffnen' : 'Code festlegen'}</button>
+      <button class="btn sec" style="margin-top:8px" id="aback">Zurück</button></div>`;
+    $('#aback').onclick = () => { view = 'mehr'; render(); };
+    $('#ago').onclick = async () => {
+      const c = ($('#acode').value || '').trim(); if (c.length < 4) { $('#aerr').textContent = 'Mindestens vier Zeichen.'; return; }
+      const h = await sha('pausentee-admin|' + c);
+      if (!cfg.admin) await db.ref(ROOT + '/config/admin').set(h);
+      else if (cfg.admin !== h) { $('#aerr').textContent = 'Falscher Code.'; return; }
+      adminOk = true; sessionStorage.setItem('pausentee-admin', '1'); renderAdmin();
+    };
+    return;
+  }
+  const past = counted().filter(m => m.t <= now()).reverse();
+  main.innerHTML = `<h2>Ergebnisse (Notfall-Knopf)</h2><div class="card adm small">
+    <p style="margin-top:0" class="muted">Normalerweise kommen die Ergebnisse von selbst. Falls nicht, hier eintragen. Ein von Hand eingetragenes Ergebnis hat Vorrang, „Automatik“ gibt wieder an ESPN ab.</p>
+    ${past.length ? past.map(m => { const r = result(m); return `<div class="mrow" style="flex-wrap:wrap"><div class="grow"><b>${esc(m.home.name)} – ${esc(m.away.name)}</b><div class="muted">${esc(fmtDay(m.t))} · ${r ? r.h + ':' + r.a + ' (' + ({manual: 'von Hand', auto: 'automatisch', espn: 'ESPN'}[r.src] || r.src) + ')' : 'noch kein Ergebnis'}</div></div>
+      <div class="row" style="gap:6px"><input id="h_${m.id}" inputmode="numeric" value="${r ? r.h : ''}"><b>:</b><input id="a_${m.id}" inputmode="numeric" value="${r ? r.a : ''}">
+      <button class="btn small" data-save="${m.id}">Setzen</button>${r && r.src === 'manual' ? `<button class="btn sec small" data-auto="${m.id}">Automatik</button>` : ''}</div></div>`; }).join('') : '<div class="empty">Noch kein gewertetes Spiel angepfiffen.</div>'}
+  </div>
+  <h2>Teilnehmer</h2><div class="card adm small">${users().sort((a, b) => a.name.localeCompare(b.name, 'de')).map(u => `<div class="mrow"><div class="grow"><b>${esc(u.name)}</b>${u.vorname ? ' · ' + esc(u.vorname) : ''}<div class="muted">dabei seit ${u.joinedAt ? esc(fmtDay(u.joinedAt)) : '?'}${u.pin ? '' : ' · PIN zurückgesetzt'}</div></div>
+    <button class="btn sec small" data-pin="${u.k}">PIN zurücksetzen</button><button class="btn sec small" data-del="${u.k}">Löschen</button></div>`).join('') || '<div class="empty">Noch niemand.</div>'}</div>
+  <button class="btn sec" style="margin-top:12px" id="aout">Admin verlassen</button>`;
+  main.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.save, h = parseInt($('#h_' + id).value, 10), a = parseInt($('#a_' + id).value, 10);
+    if (!Number.isFinite(h) || !Number.isFinite(a) || h < 0 || a < 0) { toast('Bitte zwei Zahlen eintragen'); return; }
+    await db.ref(`${ROOT}/results/${id}`).set({h, a, src: 'manual', at: firebase.database.ServerValue.TIMESTAMP}); toast('Ergebnis gesetzt'); renderAdmin();
+  });
+  main.querySelectorAll('[data-auto]').forEach(b => b.onclick = async () => { await db.ref(`${ROOT}/results/${b.dataset.auto}`).remove(); syncResults(); toast('Wieder automatisch'); setTimeout(renderAdmin, 400); });
+  main.querySelectorAll('[data-pin]').forEach(b => b.onclick = async () => { await db.ref(`${ROOT}/users/${b.dataset.pin}/pin`).remove(); toast('PIN zurückgesetzt. Beim nächsten Anmelden wird eine neue gewählt.'); renderAdmin(); });
+  main.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Wirklich löschen?'; b.style.background = 'var(--red)'; b.style.color = '#fff'; return; }
+    const k = b.dataset.del, upd = {['users/' + k]: null};
+    for (const mid of Object.keys(D.tips || {})) if (D.tips[mid] && D.tips[mid][k]) upd[`tips/${mid}/${k}`] = null;
+    for (const mid of Object.keys(D.votes || {})) if (D.votes[mid] && D.votes[mid][k]) upd[`votes/${mid}/${k}`] = null;
+    await db.ref(ROOT).update(upd); toast('Gelöscht'); renderAdmin();
+  });
+  $('#aout').onclick = () => { adminOk = false; sessionStorage.removeItem('pausentee-admin'); view = 'mehr'; render(); };
+}
+
+/* =========================================================
+   TAKT
+   ========================================================= */
+setInterval(tickCountdowns, 1000);
+let lastSched = 0;
+setInterval(() => {
+  if (document.hidden) return;
+  const ms = matches();
+  for (const m of ms) if (m.t >= START && !result(m) && now() >= m.t - 5 * 60e3 && now() < m.t + 4 * 3600e3) pollLive(m);
+  if (now() - lastSched > 5 * 60e3) { lastSched = now(); refreshSchedule(); }
+  else render();
+}, 30e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastSched = now(); refreshSchedule(); matches().filter(isLive).forEach(pollLive); } });
+
+initDb();
+lastSched = now();
+refreshSchedule().then(() => matches().filter(m => m.t >= START && !result(m) && now() >= m.t - 5 * 60e3 && now() < m.t + 4 * 3600e3).forEach(pollLive));
+</script>
+</body>
+</html>

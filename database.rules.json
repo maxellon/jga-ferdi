@@ -3,7 +3,9 @@
     "games": {
       ".read": "query.orderByChild == 'meta/createdAt' && query.endAt < now - 172800000 && query.limitToFirst <= 20",
       ".write": false,
-      ".indexOn": ["meta/createdAt"],
+      ".indexOn": [
+        "meta/createdAt"
+      ],
       "$code": {
         ".read": true,
         ".write": true,
@@ -13,6 +15,12 @@
     "jga": {
       ".read": true,
       ".write": true
+    },
+    "pausentee": {
+      ".read": true,
+      "$bereich": {
+        ".write": true
+      }
     }
   }
 }
